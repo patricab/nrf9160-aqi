@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: org.eclipse.leshan.integration.tests.write.WriteSingleValueTest
+-------------------------------------------------------------------------------
+Tests run: 80, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.611 s - in org.eclipse.leshan.integration.tests.write.WriteSingleValueTest
