@@ -61,20 +61,14 @@ java -jar ./leshan-bsserver-demo.jar
 
 Compile Leshan & Run Demos
 -------------
-Get sources :
-```bash
-#using ssh
-git clone git@github.com:eclipse/leshan.git
+First install [Maven](https://maven.apache.org) to build
+
+check using
 ```
-or
-```
-#using https
-git clone https://github.com/eclipse/leshan.git
+mvn --version
 
 ```
-
 Compile it, by running in leshan root folder :
-
 ```
 mvn clean install
 ```
