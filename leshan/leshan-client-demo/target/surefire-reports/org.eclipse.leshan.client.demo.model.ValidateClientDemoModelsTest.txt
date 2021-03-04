@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: org.eclipse.leshan.client.demo.model.ValidateClientDemoModelsTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.107 s - in org.eclipse.leshan.client.demo.model.ValidateClientDemoModelsTest
