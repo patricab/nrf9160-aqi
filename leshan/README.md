@@ -66,7 +66,6 @@ First install [Maven](https://maven.apache.org) to build
 check using
 ```
 mvn --version
-
 ```
 Compile it, by running in leshan root folder :
 ```
