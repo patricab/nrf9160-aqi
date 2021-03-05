@@ -61,7 +61,8 @@ java -jar ./leshan-bsserver-demo.jar
 
 Compile Leshan & Run Demos
 -------------
-First install [Maven](https://maven.apache.org) to build
+First install [Java Dev Kit](https://www.oracle.com/java/technologies/javase-jdk15-downloads.html) & [Maven](https://maven.apache.org) to build
+Add both to Path environment variable
 
 check using
 ```
