@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1614861174260
+Bnd-LastModified: 1614951879864
 Build-Jdk-Spec: 15
 Bundle-Description: A transport implementation for leshan server based o
  n CoAP Californium
@@ -75,13 +75,14 @@ Import-Package: javax.crypto,javax.security.auth.x500,org.eclipse.califo
  ,3)",org.eclipse.leshan.core.request.exception;version="[2.0,3)",org.ec
  lipse.leshan.core.response;version="[2.0,3)",org.eclipse.leshan.core.ut
  il;version="[2.0,3)",org.eclipse.leshan.server.bootstrap;version="[2.0,
- 3)",org.eclipse.leshan.server.californium,org.eclipse.leshan.server.cal
- ifornium.observation,org.eclipse.leshan.server.californium.registration
- ,org.eclipse.leshan.server.californium.request,org.eclipse.leshan.serve
- r.model;version="[2.0,3)",org.eclipse.leshan.server.observation;version
- ="[2.0,3)",org.eclipse.leshan.server.queue;version="[2.0,3)",org.eclips
- e.leshan.server.registration;version="[2.0,3)",org.eclipse.leshan.serve
- r.request;version="[2.0,3)",org.eclipse.leshan.server.security;version=
- "[2.0,3)",org.slf4j;version="[1.7,2)"
+ 3)",org.eclipse.leshan.server.californium;version="[2.0,3)",org.eclipse
+ .leshan.server.californium.observation;version="[2.0,3)",org.eclipse.le
+ shan.server.californium.registration;version="[2.0,3)",org.eclipse.lesh
+ an.server.californium.request;version="[2.0,3)",org.eclipse.leshan.serv
+ er.model;version="[2.0,3)",org.eclipse.leshan.server.observation;versio
+ n="[2.0,3)",org.eclipse.leshan.server.queue;version="[2.0,3)",org.eclip
+ se.leshan.server.registration;version="[2.0,3)",org.eclipse.leshan.serv
+ er.request;version="[2.0,3)",org.eclipse.leshan.server.security;version
+ ="[2.0,3)",org.slf4j;version="[1.7,2)"
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.7))"
 Tool: Bnd-5.1.1.202006162103
