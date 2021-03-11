@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: org.eclipse.leshan.integration.tests.lockstep.LockStepTest
+-------------------------------------------------------------------------------
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.802 s - in org.eclipse.leshan.integration.tests.lockstep.LockStepTest
