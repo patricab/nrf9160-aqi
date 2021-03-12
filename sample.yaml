@@ -1,10 +1,9 @@
 sample:
-  name: Asset Tracker v2 Application
+  name: nrf LwM2M client
 tests:
-  applications.asset_tracker_v2:
+  nrf9160-aqi:
     build_only: true
     build_on_all: true
-    platform_allow: nrf9160dk_nrf9160ns thingy91_nrf9160ns
-    extra_configs:
-      - CONFIG_AWS_IOT_BROKER_HOST_NAME="example-hostname.aws.com"
+    extra_args: OVERLAY_CONFIG=overlay-ci.conf
+    platform_allow: nrf9160dk_nrf9160ns, thingy91_nrf9160ns
     tags: ci_build

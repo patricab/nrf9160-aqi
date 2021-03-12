@@ -1,539 +1,514 @@
 /*
- * Copyright (c) 2021 Nordic Semiconductor ASA
+ * Copyright (c) 2019 Nordic Semiconductor ASA
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
 #include <zephyr.h>
+#include <ctype.h>
+#include <drivers/gpio.h>
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <event_manager.h>
+#include <net/lwm2m.h>
 #include <modem/nrf_modem_lib.h>
-
-#if defined(CONFIG_WATCHDOG_APPLICATION)
-#include "watchdog.h"
-#endif
-
-/* Module name is used by the event manager macros in this file */
-#define MODULE app_module
-
-#include "modules_common.h"
-#include "events/app_module_event.h"
-#include "events/cloud_module_event.h"
-#include "events/data_module_event.h"
-#include "events/sensor_module_event.h"
-#include "events/ui_module_event.h"
-#include "events/util_module_event.h"
-#include "events/modem_module_event.h"
+#include <settings/settings.h>
 
 #include <logging/log.h>
-#include <logging/log_ctrl.h>
+LOG_MODULE_REGISTER(app_lwm2m_client, CONFIG_APP_LOG_LEVEL);
 
-LOG_MODULE_REGISTER(MODULE, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
+#include <modem/at_cmd.h>
+#include <modem/lte_lc.h>
 
-/* Message structure. Events from other modules are converted to messages
- * in the event manager handler, and then queued up in the message queue
- * for processing in the main thread.
- */
-struct app_msg_data {
-	union {
-		struct cloud_module_event cloud;
-		struct ui_module_event ui;
-		struct sensor_module_event sensor;
-		struct data_module_event data;
-		struct util_module_event util;
-		struct modem_module_event modem;
-		struct app_module_event app;
-	} module;
-};
+#if defined(CONFIG_LWM2M_DTLS_SUPPORT)
+#if defined(CONFIG_MODEM_KEY_MGMT)
+#include <modem/modem_key_mgmt.h>
+#endif
+#endif
 
-/* Application module super states. */
-static enum state_type {
-	STATE_INIT,
-	STATE_RUNNING,
-	STATE_SHUTDOWN
-} state;
+#include "ui.h"
+#include "lwm2m_client.h"
+#include "settings.h"
 
-/* Application sub states. The application can be in either active or passive
- * mode.
- *
- * Active mode: Sensor data and GPS position is acquired at a configured
- *		interval and sent to cloud.
- *
- * Passive mode: Sensor data and GPS position is acquired when movement is
- *		 detected, or after the configured movement timeout occurs.
- */
-static enum sub_state_type {
-	SUB_STATE_ACTIVE_MODE,
-	SUB_STATE_PASSIVE_MODE,
-} sub_state;
+#if !defined(CONFIG_LTE_LINK_CONTROL)
+#error "Missing CONFIG_LTE_LINK_CONTROL"
+#endif
 
-/* Internal copy of the device configuration. */
-static struct cloud_data_cfg app_cfg;
+BUILD_ASSERT(sizeof(CONFIG_APP_LWM2M_SERVER) > 1,
+		 "CONFIG_APP_LWM2M_SERVER must be set in prj.conf");
+/*BUILD_ASSERT(sizeof(CONFIG_APP_LWM2M_CLIENT) > 1,
+		 "CONFIG_APP_LWM2M_CLIENT must be set in prj.conf");*/
 
-/* Timer callback used to signal when timeout has occurred both in active
- * and passive mode.
- */
-static void data_sample_timer_handler(struct k_timer *timer);
+#define APP_BANNER "Run LWM2M client"
 
-/* Application module message queue. */
-#define APP_QUEUE_ENTRY_COUNT		10
-#define APP_QUEUE_BYTE_ALIGNMENT	4
+#define IMEI_LEN		15
+#define ENDPOINT_NAME_LEN	(12)
 
-K_MSGQ_DEFINE(msgq_app, sizeof(struct app_msg_data), APP_QUEUE_ENTRY_COUNT,
-	      APP_QUEUE_BYTE_ALIGNMENT);
+#define LWM2M_SECURITY_PRE_SHARED_KEY 0
+#define LWM2M_SECURITY_RAW_PUBLIC_KEY 1
+#define LWM2M_SECURITY_CERTIFICATE 2
+#define LWM2M_SECURITY_NO_SEC 3
 
-/* Data sample timer used in active mode. */
-K_TIMER_DEFINE(data_sample_timer, data_sample_timer_handler, NULL);
+static uint8_t endpoint_name[ENDPOINT_NAME_LEN+1];
+static uint8_t imei_buf[IMEI_LEN + 5]; /* account for /n/r */
+static struct lwm2m_ctx client;
 
-/* Movement timer used to detect movement timeouts in passive mode. */
-K_TIMER_DEFINE(movement_timeout_timer, data_sample_timer_handler, NULL);
+#if defined(CONFIG_LWM2M_DTLS_SUPPORT)
+#include "config.h"
+#endif /* CONFIG_LWM2M_DTLS_SUPPORT */
 
-/* Movement resolution timer decides the period after movement that consecutive
- * movements are ignored and do not cause data collection. This is used to
- * lower power consumption by limiting how often GPS search is performed and
- * data is sent on air.
- */
-K_TIMER_DEFINE(movement_resolution_timer, NULL, NULL);
+static struct k_sem lwm2m_restart;
 
-/* Module data structure to hold information of the application module, which
- * opens up for using convenience functions available for modules.
- */
-static struct module_data self = {
-	.name = "app",
-	.msg_q = &msgq_app,
-};
+static void rd_client_event(struct lwm2m_ctx *client,
+			    enum lwm2m_rd_client_event client_event);
 
-/* Convenience functions used in internal state handling. */
-static char *state2str(enum state_type new_state)
+void client_acknowledge(void)
 {
-	switch (new_state) {
-	case STATE_INIT:
-		return "STATE_INIT";
-	case STATE_RUNNING:
-		return "STATE_RUNNING";
-	case STATE_SHUTDOWN:
-		return "STATE_SHUTDOWN";
-	default:
-		return "Unknown";
-	}
+	lwm2m_acknowledge(&client);
 }
 
-static char *sub_state2str(enum sub_state_type new_state)
+/**@brief User interface event handler. */
+static void ui_evt_handler(struct ui_evt *evt)
 {
-	switch (new_state) {
-	case SUB_STATE_ACTIVE_MODE:
-		return "SUB_STATE_ACTIVE_MODE";
-	case SUB_STATE_PASSIVE_MODE:
-		return "SUB_STATE_PASSIVE_MODE";
-	default:
-		return "Unknown";
-	}
-}
-
-static void state_set(enum state_type new_state)
-{
-	if (new_state == state) {
-		LOG_DBG("State: %s", state2str(state));
+	if (!evt) {
 		return;
 	}
 
-	LOG_DBG("State transition %s --> %s",
-		state2str(state),
-		state2str(new_state));
+	LOG_DBG("Event: %d", evt->button);
 
-	state = new_state;
-}
-
-static void sub_state_set(enum sub_state_type new_state)
-{
-	if (new_state == sub_state) {
-		LOG_DBG("Sub state: %s", sub_state2str(sub_state));
+#if defined(CONFIG_UI_BUTTON)
+	if (handle_button_events(evt) == 0) {
 		return;
 	}
-
-	LOG_DBG("Sub state transition %s --> %s",
-		sub_state2str(sub_state),
-		sub_state2str(new_state));
-
-	sub_state = new_state;
-}
-
-/* Check the return code from nRF modem library initializaton to ensure that
- * the modem is rebooted if a modem firmware update is ready to be applied or
- * an error condition occurred during firmware update or library initialization.
- */
-static void handle_nrf_modem_lib_init_ret(void)
-{
-	int ret = nrf_modem_lib_get_init_ret();
-
-	/* Handle return values relating to modem firmware update */
-	switch (ret) {
-	case 0:
-		/* Initialization successful, no action required. */
+#endif
+#if defined(CONFIG_LWM2M_IPSO_ACCELEROMETER) && CONFIG_FLIP_INPUT > 0
+	if (handle_accel_events(evt) == 0) {
 		return;
-	case MODEM_DFU_RESULT_OK:
-		LOG_INF("MODEM UPDATE OK. Will run new firmware after reboot");
-		break;
-	case MODEM_DFU_RESULT_UUID_ERROR:
-	case MODEM_DFU_RESULT_AUTH_ERROR:
-		LOG_ERR("MODEM UPDATE ERROR %d. Will run old firmware", ret);
-		break;
-	case MODEM_DFU_RESULT_HARDWARE_ERROR:
-	case MODEM_DFU_RESULT_INTERNAL_ERROR:
-		LOG_ERR("MODEM UPDATE FATAL ERROR %d. Modem failure", ret);
-		break;
-	default:
-		/* All non-zero return codes other than DFU result codes are
-		 * considered irrecoverable and a reboot is needed.
-		 */
-		LOG_ERR("nRF modem lib initialization failed, error: %d", ret);
-		break;
 	}
-
-	LOG_WRN("Rebooting...");
-	LOG_PANIC();
-	sys_reboot(SYS_REBOOT_COLD);
+#endif
 }
 
-/* Event manager handler. Puts event data into messages and adds them to the
- * application message queue.
- */
-static bool event_handler(const struct event_header *eh)
+static int remove_whitespace(char *buf)
 {
-	struct app_msg_data msg = {0};
-	bool enqueue_msg = false;
+	size_t i, j = 0, len;
 
-	if (is_cloud_module_event(eh)) {
-		struct cloud_module_event *evt = cast_cloud_module_event(eh);
+	len = strlen(buf);
+	for (i = 0; i < len; i++) {
+		if (buf[i] >= 32 && buf[i] <= 126) {
+			if (j != i) {
+				buf[j] = buf[i];
+			}
 
-		msg.module.cloud = *evt;
-		enqueue_msg = true;
-	}
-
-	if (is_app_module_event(eh)) {
-		struct app_module_event *evt = cast_app_module_event(eh);
-
-		msg.module.app = *evt;
-		enqueue_msg = true;
-	}
-
-	if (is_data_module_event(eh)) {
-		struct data_module_event *evt = cast_data_module_event(eh);
-
-		msg.module.data = *evt;
-		enqueue_msg = true;
-	}
-
-	if (is_sensor_module_event(eh)) {
-		struct sensor_module_event *evt = cast_sensor_module_event(eh);
-
-		msg.module.sensor = *evt;
-		enqueue_msg = true;
-	}
-
-	if (is_util_module_event(eh)) {
-		struct util_module_event *evt = cast_util_module_event(eh);
-
-		msg.module.util = *evt;
-		enqueue_msg = true;
-	}
-
-	if (is_modem_module_event(eh)) {
-		struct modem_module_event *evt = cast_modem_module_event(eh);
-
-		msg.module.modem = *evt;
-		enqueue_msg = true;
-	}
-
-	if (is_ui_module_event(eh)) {
-		struct ui_module_event *evt = cast_ui_module_event(eh);
-
-		msg.module.ui = *evt;
-		enqueue_msg = true;
-	}
-
-	if (enqueue_msg) {
-		int err = module_enqueue_msg(&self, &msg);
-
-		if (err) {
-			LOG_ERR("Message could not be enqueued");
-			SEND_ERROR(app, APP_EVT_ERROR, err);
+			j++;
 		}
 	}
 
-	return false;
+	if (j < len) {
+		buf[j] = '\0';
+	}
+
+	return 0;
 }
 
-static void data_sample_timer_handler(struct k_timer *timer)
+static int query_modem(const char *cmd, char *buf, size_t buf_len)
 {
-	ARG_UNUSED(timer);
-	SEND_EVENT(app, APP_EVT_DATA_GET_ALL);
+	int ret;
+	enum at_cmd_state at_state;
+
+	ret = at_cmd_write(cmd, buf, buf_len, &at_state);
+	if (ret) {
+		LOG_ERR("at_cmd_write [%s] error:%d, at_state: %d",
+			cmd, ret, at_state);
+		strncpy(buf, "error", buf_len);
+		return ret;
+	}
+
+	remove_whitespace(buf);
+	return 0;
 }
 
-/* Static module functions. */
-static void data_get(void)
+static int lwm2m_setup(void)
 {
-	static bool first = true;
-	struct app_module_event *app_module_event = new_app_module_event();
-	size_t count = 0;
+	/* use IMEI as serial number */
+	lwm2m_init_device(imei_buf);
+	lwm2m_init_security(&client, endpoint_name);
+#if defined(CONFIG_LWM2M_LOCATION_OBJ_SUPPORT)
+	lwm2m_init_location();
+#endif
+#if defined(CONFIG_LWM2M_FIRMWARE_UPDATE_OBJ_SUPPORT)
+	lwm2m_init_firmware();
+#endif
+#if defined(CONFIG_LWM2M_CONN_MON_OBJ_SUPPORT)
+	lwm2m_init_connmon();
+#endif
+#if defined(CONFIG_LWM2M_IPSO_LIGHT_CONTROL)
+	lwm2m_init_light_control();
+#endif
+#if defined(CONFIG_LWM2M_IPSO_TEMP_SENSOR)
+	lwm2m_init_temp();
+#endif
+#if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
+	lwm2m_init_conc();
+#endif
+#if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
+	lwm2m_init_prtcl();
+#endif
+#if defined(CONFIG_UI_BUZZER)
+	lwm2m_init_buzzer();
+#endif
+#if defined(CONFIG_UI_BUTTON)
+	lwm2m_init_button();
+#endif
+#if defined(CONFIG_LWM2M_IPSO_ACCELEROMETER)
+	lwm2m_init_accel();
+#endif
+	return 0;
+}
 
-	/* Specify which data that is to be included in the transmission. */
-	app_module_event->data_list[count++] = APP_DATA_MODEM_DYNAMIC;
-	app_module_event->data_list[count++] = APP_DATA_BATTERY;
-	app_module_event->data_list[count++] = APP_DATA_ENVIRONMENTAL;
+int lwm2m_security_index_to_inst_id(int index);
 
-	/* Specify a timeout that each module has to fetch data. If data is not
-	 * fetched within this timeout, the data that is available is sent.
-	 *
-	 * The reason for having at least 65 seconds timeout is that the GNSS
-	 * module in nRF9160 will always search for at least 60 seconds for the
-	 * first position fix after a reboot.
-	 *
-	 * The addition of 5 seconds to the configured GPS timeout is  done
-	 * to let the GPS module run the currently ongoing search until
-	 * the end. If the timeout for sending data is exactly the same as for
-	 * the GPS search, a fix occurring at the same time as timeout is
-	 * triggered will be missed and not sent to cloud before the next
-	 * interval has  passed in active mode, or until next movement in
-	 * passive mode.
-	 */
-	app_module_event->timeout = MAX(app_cfg.gps_timeout + 5, 65);
+static int find_server_security_instance(void)
+{
+	char pathstr[10];
+	bool bootstrap;
+	int i;
+	int instance;
+	int ret;
 
-	if (first) {
-		if (IS_ENABLED(CONFIG_APP_REQUEST_GPS_ON_INITIAL_SAMPLING)) {
-			app_module_event->data_list[count++] = APP_DATA_GNSS;
-		} else {
-			app_module_event->timeout = 10;
+	for (i = 0; i < CONFIG_LWM2M_SECURITY_INSTANCE_COUNT; i++) {
+		instance = lwm2m_security_index_to_inst_id(i);
+		if (instance < 0) {
+			LOG_DBG("Empty instance at index %d", i);
+			continue;
 		}
 
-		app_module_event->data_list[count++] = APP_DATA_MODEM_STATIC;
-		first = false;
+		snprintk(pathstr, sizeof(pathstr), "0/%d/1", instance);
+
+		ret = lwm2m_engine_get_bool(pathstr, &bootstrap);
+		if (ret < 0) {
+			LOG_ERR("Failed to check bootstrap, err %d", ret);
+			continue;
+		}
+
+		if (!bootstrap) {
+			LOG_DBG("Security instance found, %d", instance);
+			return instance;
+		}
+	}
+
+	return -1;
+}
+
+static int get_security_mode(int instance)
+{
+	char pathstr[10];
+	uint8_t security_mode;
+	int ret;
+
+	snprintk(pathstr, sizeof(pathstr), "0/%d/2", instance);
+
+	ret = lwm2m_engine_get_u8(pathstr, &security_mode);
+	if (ret < 0) {
+		LOG_ERR("Failed to obtain security mode, err %d", ret);
+		return -1;
+	}
+
+	return security_mode;
+}
+
+#if defined(CONFIG_LWM2M_DTLS_SUPPORT)
+static void provision_psk(int instance)
+{
+	char pathstr[10];
+	char psk_hex[64];
+	int ret;
+	uint8_t *identity;
+	uint16_t identity_len;
+	uint8_t *psk;
+	uint16_t psk_len;
+	uint8_t flags;
+
+
+	/* Obtain identity. */
+	snprintk(pathstr, sizeof(pathstr), "0/%d/3", instance);
+
+	ret = lwm2m_engine_get_res_data(pathstr, (void **)&identity,
+					&identity_len, &flags);
+	if (ret < 0) {
+		LOG_ERR("Failed to obtain client identity.");
+		return;
+	}
+
+	/* Obtain PSK. */
+	snprintk(pathstr, sizeof(pathstr), "0/%d/5", instance);
+
+	ret = lwm2m_engine_get_res_data(pathstr, (void **)&psk,
+					&psk_len, &flags);
+	if (ret < 0) {
+		LOG_ERR("Failed to obtain PSK.");
+		return;
+	}
+
+	/* Convert PSK to a format accepted by the modem. */
+	psk_len = bin2hex(psk, psk_len, psk_hex, sizeof(psk_hex));
+	if (psk_len == 0) {
+		LOG_ERR("PSK is too large to convert.");
+		return;
+	}
+
+	lwm2m_rd_client_stop(&client, rd_client_event);
+	lte_lc_offline();
+
+	ret = modem_key_mgmt_write(client.tls_tag,
+				   MODEM_KEY_MGMT_CRED_TYPE_PSK,
+				   psk_hex, psk_len);
+	if (ret < 0) {
+		LOG_ERR("Error setting cred tag %d type %d: Error %d",
+			client.tls_tag, MODEM_KEY_MGMT_CRED_TYPE_PSK,
+			ret);
+		goto exit;
+	}
+
+	ret = modem_key_mgmt_write(client.tls_tag,
+				   MODEM_KEY_MGMT_CRED_TYPE_IDENTITY,
+				   identity, identity_len);
+	if (ret < 0) {
+		LOG_ERR("Error setting cred tag %d type %d: Error %d",
+			client.tls_tag, MODEM_KEY_MGMT_CRED_TYPE_IDENTITY,
+			ret);
+	}
+
+exit:
+	lte_lc_connect();
+	lwm2m_rd_client_start(&client, endpoint_name, false, rd_client_event);
+}
+#endif
+
+static void provision_credentials(void)
+{
+	int security_instance;
+	int security_mode;
+
+	security_instance = find_server_security_instance();
+	if (security_instance == -1) {
+		LOG_ERR("No security instance found");
+		return;
+	}
+
+	security_mode = get_security_mode(security_instance);
+	if (security_mode == -1) {
+		return;
+	}
+
+	switch (security_mode) {
+#if defined(CONFIG_LWM2M_DTLS_SUPPORT)
+	case LWM2M_SECURITY_PRE_SHARED_KEY:
+		LOG_DBG("PSK mode, provisioning key and identity.");
+		client.tls_tag = SERVER_TLS_TAG;
+		provision_psk(security_instance);
+		break;
+#endif
+
+	case LWM2M_SECURITY_NO_SEC:
+		LOG_DBG("NoSec mode, no provisioning needed.");
+		break;
+
+	default:
+		LOG_ERR("Unsupported security mode");
+		break;
+	}
+}
+
+static void rd_client_event(struct lwm2m_ctx *client,
+			    enum lwm2m_rd_client_event client_event)
+{
+	switch (client_event) {
+
+	case LWM2M_RD_CLIENT_EVENT_NONE:
+		/* do nothing */
+		break;
+
+	case LWM2M_RD_CLIENT_EVENT_BOOTSTRAP_REG_FAILURE:
+		LOG_DBG("Bootstrap registration failure!");
+		break;
+
+	case LWM2M_RD_CLIENT_EVENT_BOOTSTRAP_REG_COMPLETE:
+		LOG_DBG("Bootstrap registration complete");
+		break;
+
+	case LWM2M_RD_CLIENT_EVENT_BOOTSTRAP_TRANSFER_COMPLETE:
+		LOG_DBG("Bootstrap transfer complete");
+		LOG_DBG("Boostrap finished, provisioning credentials.");
+		provision_credentials();
+		break;
+
+	case LWM2M_RD_CLIENT_EVENT_REGISTRATION_FAILURE:
+		LOG_DBG("Registration failure!");
+		break;
+
+	case LWM2M_RD_CLIENT_EVENT_REGISTRATION_COMPLETE:
+		LOG_DBG("Registration complete");
+		break;
+
+	case LWM2M_RD_CLIENT_EVENT_REG_UPDATE_FAILURE:
+		LOG_DBG("Registration update failure!");
+		break;
+
+	case LWM2M_RD_CLIENT_EVENT_REG_UPDATE_COMPLETE:
+		LOG_DBG("Registration update complete");
+		break;
+
+	case LWM2M_RD_CLIENT_EVENT_DEREGISTER_FAILURE:
+		LOG_DBG("Deregister failure!");
+		break;
+
+	case LWM2M_RD_CLIENT_EVENT_DISCONNECT:
+		LOG_DBG("Disconnected");
+		break;
+
+	case LWM2M_RD_CLIENT_EVENT_QUEUE_MODE_RX_OFF:
+		LOG_DBG("Queue mode RX window closed");
+		break;
+
+	case LWM2M_RD_CLIENT_EVENT_NETWORK_ERROR:
+		LOG_ERR("LwM2M engine reported a network error.");
+		k_sem_give(&lwm2m_restart);
+		break;
+	}
+}
+
+static void modem_connect(void)
+{
+	int ret;
+
+#if defined(CONFIG_LWM2M_QUEUE_MODE_ENABLED)
+	ret = lte_lc_psm_req(true);
+	if (ret < 0) {
+		LOG_ERR("lte_lc_psm_req, error: (%d)", ret);
 	} else {
-		app_module_event->data_list[count++] = APP_DATA_GNSS;
+		LOG_INF("PSM mode requested");
 	}
+#endif
 
-	/* Set list count to number of data types passed in app_module_event. */
-	app_module_event->count = count;
-	app_module_event->type = APP_EVT_DATA_GET;
+	do {
+		LOG_INF("Connecting to LTE network.");
+		LOG_INF("This may take several minutes.");
+		ui_led_set_pattern(UI_LTE_CONNECTING);
 
-	EVENT_SUBMIT(app_module_event);
-}
-
-/* Message handler for STATE_INIT. */
-static void on_state_init(struct app_msg_data *msg)
-{
-	if (IS_EVENT(msg, data, DATA_EVT_CONFIG_INIT)) {
-		/* Keep a copy of the new configuration. */
-		app_cfg = msg->module.data.data.cfg;
-
-		if (app_cfg.active_mode) {
-			LOG_INF("Device mode: Active");
-			LOG_INF("Start data sample timer: %d seconds interval",
-				app_cfg.active_wait_timeout);
-			k_timer_start(&data_sample_timer,
-				      K_SECONDS(app_cfg.active_wait_timeout),
-				      K_SECONDS(app_cfg.active_wait_timeout));
+		ret = lte_lc_connect();
+		if (ret < 0) {
+			LOG_WRN("Failed to establish LTE connection (%d).",
+				ret);
+			LOG_WRN("Will retry in a minute.");
+			lte_lc_offline();
+			k_sleep(K_SECONDS(60));
 		} else {
-			LOG_INF("Device mode: Passive");
-			LOG_INF("Start movement timeout: %d seconds interval",
-				app_cfg.movement_timeout);
-
-			k_timer_start(&movement_timeout_timer,
-				K_SECONDS(app_cfg.movement_timeout),
-				K_SECONDS(app_cfg.movement_timeout));
+			LOG_INF("Connected to LTE network");
+			ui_led_set_pattern(UI_LTE_CONNECTED);
 		}
-
-		state_set(STATE_RUNNING);
-		sub_state_set(app_cfg.active_mode ? SUB_STATE_ACTIVE_MODE :
-						    SUB_STATE_PASSIVE_MODE);
-	}
-}
-
-/* Message handler for STATE_RUNNING. */
-static void on_state_running(struct app_msg_data *msg)
-{
-	if (IS_EVENT(msg, data, DATA_EVT_DATE_TIME_OBTAINED)) {
-		data_get();
-	}
-
-	if (IS_EVENT(msg, app, APP_EVT_DATA_GET_ALL)) {
-		data_get();
-	}
-}
-
-/* Message handler for SUB_STATE_PASSIVE_MODE. */
-void on_sub_state_passive(struct app_msg_data *msg)
-{
-	if (IS_EVENT(msg, data, DATA_EVT_CONFIG_READY)) {
-		/* Keep a copy of the new configuration. */
-		app_cfg = msg->module.data.data.cfg;
-
-		if (app_cfg.active_mode) {
-			LOG_INF("Device mode: Active");
-			LOG_INF("Start data sample timer: %d seconds interval",
-				app_cfg.active_wait_timeout);
-			k_timer_start(&data_sample_timer,
-				      K_SECONDS(app_cfg.active_wait_timeout),
-				      K_SECONDS(app_cfg.active_wait_timeout));
-			k_timer_stop(&movement_timeout_timer);
-			sub_state_set(SUB_STATE_ACTIVE_MODE);
-			return;
-		}
-
-		LOG_INF("Device mode: Passive");
-		LOG_INF("Start movement timeout: %d seconds interval",
-			app_cfg.movement_timeout);
-
-		k_timer_start(&movement_timeout_timer,
-			      K_SECONDS(app_cfg.movement_timeout),
-			      K_SECONDS(app_cfg.movement_timeout));
-		k_timer_stop(&data_sample_timer);
-	}
-
-	if ((IS_EVENT(msg, sensor, SENSOR_EVT_MOVEMENT_DATA_READY)) ||
-	    (IS_EVENT(msg, ui, UI_EVT_BUTTON_DATA_READY))) {
-
-		if (IS_EVENT(msg, ui, UI_EVT_BUTTON_DATA_READY) &&
-		    msg->module.ui.data.ui.button_number != 2) {
-			return;
-		}
-
-		/* Trigger sample/publication cycle if there has been movement
-		 * or button 2 has been pushed on the DK.
-		 */
-
-		if (k_timer_remaining_get(&movement_resolution_timer) == 0) {
-			/* Do an initial data sample. */
-			data_sample_timer_handler(NULL);
-
-			LOG_INF("%d seconds until movement can trigger",
-				app_cfg.movement_resolution);
-			LOG_INF("a new data sample/publication");
-
-			/* Start one shot timer. After the timer has expired,
-			 * movement is the only event that triggers a new
-			 * one shot timer.
-			 */
-			k_timer_start(&movement_resolution_timer,
-				      K_SECONDS(app_cfg.movement_resolution),
-				      K_SECONDS(0));
-		}
-	}
-}
-
-/* Message handler for SUB_STATE_ACTIVE_MODE. */
-static void on_sub_state_active(struct app_msg_data *msg)
-{
-	if (IS_EVENT(msg, data, DATA_EVT_CONFIG_READY)) {
-		/* Keep a copy of the new configuration. */
-		app_cfg = msg->module.data.data.cfg;
-
-		if (!app_cfg.active_mode) {
-			LOG_INF("Device mode: Passive");
-			LOG_INF("Start movement timeout: %d seconds interval",
-				app_cfg.movement_timeout);
-			k_timer_start(&movement_timeout_timer,
-				      K_SECONDS(app_cfg.movement_timeout),
-				      K_SECONDS(app_cfg.movement_timeout));
-			k_timer_stop(&data_sample_timer);
-			sub_state_set(SUB_STATE_PASSIVE_MODE);
-			return;
-		}
-
-		LOG_INF("Device mode: Active");
-		LOG_INF("Start data sample timer: %d seconds interval",
-			app_cfg.active_wait_timeout);
-
-		k_timer_start(&data_sample_timer,
-			      K_SECONDS(app_cfg.active_wait_timeout),
-			      K_SECONDS(app_cfg.active_wait_timeout));
-		k_timer_stop(&movement_timeout_timer);
-	}
-}
-
-/* Message handler for all states. */
-static void on_all_events(struct app_msg_data *msg)
-{
-	if (IS_EVENT(msg, util, UTIL_EVT_SHUTDOWN_REQUEST)) {
-		k_timer_stop(&data_sample_timer);
-		k_timer_stop(&movement_timeout_timer);
-		k_timer_stop(&movement_resolution_timer);
-
-		SEND_EVENT(app, APP_EVT_SHUTDOWN_READY);
-		state_set(STATE_SHUTDOWN);
-	}
+	} while (ret < 0);
 }
 
 void main(void)
 {
-	struct app_msg_data msg;
+	uint32_t flags = IS_ENABLED(CONFIG_LWM2M_RD_CLIENT_SUPPORT_BOOTSTRAP) ?
+				    LWM2M_RD_CLIENT_FLAG_BOOTSTRAP : 0;
+	int ret;
 
-	self.thread_id = k_current_get();
+	LOG_INF(APP_BANNER);
 
-	module_start(&self);
-	handle_nrf_modem_lib_init_ret();
+	k_sem_init(&lwm2m_restart, 0, 1);
 
-	if (event_manager_init()) {
-		/* Without the event manager, the application will not work
-		 * as intended. A reboot is required in an attempt to recover.
-		 */
-		LOG_ERR("Event manager could not be initialized, rebooting...");
-		k_sleep(K_SECONDS(5));
-		sys_reboot(SYS_REBOOT_COLD);
-	} else {
-		SEND_EVENT(app, APP_EVT_START);
+	ui_init(ui_evt_handler);
+
+	ret = fota_settings_init();
+	if (ret < 0) {
+		LOG_ERR("Unable to init settings (%d)", ret);
+		return;
 	}
 
-#if defined(CONFIG_WATCHDOG_APPLICATION)
-	int err = watchdog_init_and_start();
+	/* Load *all* persistent settings */
+	settings_load();
 
-	if (err) {
-		LOG_DBG("watchdog_init_and_start, error: %d", err);
-		SEND_ERROR(app, APP_EVT_ERROR, err);
+#if defined(CONFIG_LWM2M_FIRMWARE_UPDATE_OBJ_SUPPORT)
+	/* Modem FW update needs to be verified before modem is used. */
+	lwm2m_verify_modem_fw_update();
+#endif
+
+	LOG_INF("Initializing modem.");
+	ret = lte_lc_init();
+	if (ret < 0) {
+		LOG_ERR("Unable to init modem (%d)", ret);
+		return;
+	}
+
+	/* query IMEI */
+	query_modem("AT+CGSN", imei_buf, sizeof(imei_buf));
+	/* use IMEI as unique endpoint name */
+	snprintf(endpoint_name, sizeof(endpoint_name), "nrf-9160dk-e"); //%s", imei_buf);
+	LOG_INF("endpoint: %s", log_strdup(endpoint_name));
+
+	/* Setup LwM2M */
+	(void)memset(&client, 0x0, sizeof(client));
+
+	ret = lwm2m_setup();
+	if (ret < 0) {
+		LOG_ERR("Cannot setup LWM2M fields (%d)", ret);
+		return;
+	}
+
+	ret = lwm2m_init_image();
+	if (ret < 0) {
+		LOG_ERR("Failed to setup image properties (%d)", ret);
+		return;
+	}
+
+#if defined(CONFIG_LWM2M_DTLS_SUPPORT)
+	ret = modem_key_mgmt_write(client.tls_tag,
+				   MODEM_KEY_MGMT_CRED_TYPE_PSK,
+				   client_psk, strlen(client_psk));
+	if (ret < 0) {
+		LOG_ERR("Error setting cred tag %d type %d: Error %d",
+			client.tls_tag, MODEM_KEY_MGMT_CRED_TYPE_PSK,
+			ret);
+	}
+
+	ret = modem_key_mgmt_write(client.tls_tag,
+				   MODEM_KEY_MGMT_CRED_TYPE_IDENTITY,
+				   endpoint_name, strlen(endpoint_name));
+	if (ret < 0) {
+		LOG_ERR("Error setting cred tag %d type %d: Error %d",
+			client.tls_tag, MODEM_KEY_MGMT_CRED_TYPE_IDENTITY,
+			ret);
+	}
+#endif
+
+	modem_connect();
+
+#if defined(CONFIG_LWM2M_CONN_MON_OBJ_SUPPORT)
+	ret = lwm2m_start_connmon();
+	if (ret < 0) {
+		LOG_ERR("Error registering rsrp handler (%d)", ret);
 	}
 #endif
 
 	while (true) {
-		module_get_next_msg(&self, &msg);
+		lwm2m_rd_client_start(&client, endpoint_name, flags,
+				      rd_client_event);
 
-		switch (state) {
-		case STATE_INIT:
-			on_state_init(&msg);
-			break;
-		case STATE_RUNNING:
-			switch (sub_state) {
-			case SUB_STATE_ACTIVE_MODE:
-				on_sub_state_active(&msg);
-				break;
-			case SUB_STATE_PASSIVE_MODE:
-				on_sub_state_passive(&msg);
-				break;
-			default:
-				LOG_WRN("Unknown application sub state");
-				break;
-			}
+		k_sem_take(&lwm2m_restart, K_FOREVER);
 
-			on_state_running(&msg);
-			break;
-		case STATE_SHUTDOWN:
-			/* The shutdown state has no transition. */
-			break;
-		default:
-			LOG_WRN("Unknown application state");
-			break;
+		LOG_INF("LwM2M restart requested. The sample will try to"
+			" re-establish network connection.");
+
+		/* Stop the LwM2M engine. */
+		lwm2m_rd_client_stop(&client, rd_client_event);
+
+		/* Try to reconnect to the network. */
+		ret = lte_lc_offline();
+		if (ret < 0) {
+			LOG_ERR("Failed to put LTE link in offline state. (%d)",
+				ret);
 		}
 
-		on_all_events(&msg);
+		modem_connect();
 	}
 }
-
-EVENT_LISTENER(MODULE, event_handler);
-EVENT_SUBSCRIBE_EARLY(MODULE, cloud_module_event);
-EVENT_SUBSCRIBE(MODULE, app_module_event);
-EVENT_SUBSCRIBE(MODULE, data_module_event);
-EVENT_SUBSCRIBE(MODULE, util_module_event);
-EVENT_SUBSCRIBE_FINAL(MODULE, ui_module_event);
-EVENT_SUBSCRIBE_FINAL(MODULE, sensor_module_event);
-EVENT_SUBSCRIBE_FINAL(MODULE, modem_module_event);
