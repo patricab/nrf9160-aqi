@@ -35,3 +35,6 @@ target_sources_ifdef(CONFIG_LWM2M_IPSO_ACCELEROMETER
 target_sources_ifdef(CONFIG_LWM2M_IPSO_CONCENTRATION
 	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_concentration.c
 	)
+target_sources_ifdef(CONFIGLWM2M_OpenLX_SP_PARTICLE
+	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_particulate.c
+	)
