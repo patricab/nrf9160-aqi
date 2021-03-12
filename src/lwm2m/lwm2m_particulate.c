@@ -66,7 +66,7 @@ static void *prtcl_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_i
 #endif
 	lwm2m_engine_set_float32("10314/0/5700", &prtcl_float); // Sensor Value
 	*data_len = sizeof(prtcl_float);
-	lwm2m_engine_set_string("10314/0/5701", "ug/m3"); // Sensor Units
+	lwm2m_engine_set_res_data("10314/0/5701", "ug/m3"); // Sensor Units
 	lwm2m_engine_set_float32("10314/0/5604", 1000.0); // Max Range Value
 	
 
