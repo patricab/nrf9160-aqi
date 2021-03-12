@@ -64,8 +64,12 @@ static void *prtcl_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_i
 	 */
 	read_particulate(die_dev, &prtcl_float);
 #endif
-	lwm2m_engine_set_float32("10314/0/5700", &prtcl_float);
+	lwm2m_engine_set_float32("10314/0/5700", &prtcl_float); // Sensor Value
 	*data_len = sizeof(prtcl_float);
+	lwm2m_engine_set_string("10314/0/5701", "ug/m3"); // Sensor Units
+	lwm2m_engine_set_float32("10314/0/5604", 1000.0); // Max Range Value
+	
+
 	/* get current time from device 
 	lwm2m_engine_get_s32("3/0/13", &ts);
 	 set timestamp 

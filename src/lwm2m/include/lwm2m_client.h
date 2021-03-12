@@ -45,6 +45,14 @@ int lwm2m_init_light_control(void);
 int lwm2m_init_temp(void);
 #endif
 
+#if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
+int lwm2m_init_conc(void);
+#endif
+
+#if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
+int lwm2m_init_prtcl(void);
+#endif
+
 #if defined(CONFIG_UI_BUZZER)
 int lwm2m_init_buzzer(void);
 #endif
