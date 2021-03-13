@@ -66,10 +66,10 @@ static void *conc_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_in
 #endif
 	lwm2m_engine_set_float32("3325/0/5700", &conc_float);
 	*data_len = sizeof(conc_float);
-	/* get current time from device 
+	//get current time from device 
 	lwm2m_engine_get_s32("3/0/13", &ts);
-	 set timestamp 
-	lwm2m_engine_set_s32("3325/0/5518", ts);*/
+	//set timestamp 
+	lwm2m_engine_set_s32("3325/0/5518", ts);
 
 	return &conc_float;
 }

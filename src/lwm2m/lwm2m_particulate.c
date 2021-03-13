@@ -11,12 +11,17 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(app_lwm2m_particulate, CONFIG_APP_LOG_LEVEL);
 
+// Max sensor value 1000 μg/m3 
+static struct float32_value max_prtcl_float = { 1000, 000000};
+// Particle sizes
+static struct float32_value _prtcl_float25 = { 2, 500000};
+static struct float32_value _prtcl_float100 = { 10, 000000};
 // use 50.5ppm if no sensor available
 static struct float32_value prtcl_float25 = { 50, 500000 };
 // use 24.12ppm if no sensor available
 static struct float32_value prtcl_float100 = { 24, 120000};
 static const struct device *die_dev;
-static int32_t timestamp;
+//static int32_t timestamp;
 
 #if defined(CONFIG_PRTCL_NRF5_NAME)
 static int read_particulate(const struct device *prtcl_dev,
@@ -68,9 +73,9 @@ static void *prtcl_read_cb25(uint16_t obj_inst_id, uint16_t res_id, uint16_t res
 #endif
 	lwm2m_engine_set_float32("10314/0/5700", &prtcl_float25); // Sensor Value
 	*data_len = sizeof(prtcl_float25);
-	lwm2m_engine_set_res_data("10314/0/5701", "ug/m3"); // Sensor Units
-	lwm2m_engine_set_float32("10314/0/5604", 1.0e3); // Max Range Value
-	lwm2m_engine_set_float32("10314/0/6043", 2.5e-6); // Measured Particle Size
+	lwm2m_engine_set_res_data("10314/0/5701", "ug/m3", 5, 0); // Sensor Units
+	lwm2m_engine_set_float32("10314/0/5604", &max_prtcl_float); // Max Range Value
+	lwm2m_engine_set_float32("10314/0/6043", &_prtcl_float25); // Measured Particle Size
 
 	/* get current time from device 
 	lwm2m_engine_get_s32("3/0/13", &ts);
@@ -96,13 +101,13 @@ static void *prtcl_read_cb100(uint16_t obj_inst_id, uint16_t res_id, uint16_t re
 		 * This is because there is currently no way to report read_cb
 		 * failures to the LWM2M engine.
 		 */
-		read_particulate(die_dev, &prtcl_float25);
+		read_particulate(die_dev, &prtcl_float100);
 	#endif
 	lwm2m_engine_set_float32("10314/1/5700", &prtcl_float100); // Sensor Value
 	*data_len = sizeof(prtcl_float100);
-	lwm2m_engine_set_res_data("10314/1/5701", "ug/m3"); // Sensor Units
-	lwm2m_engine_set_float32("10314/1/5604", 1.0e3); // Max Range Value
-	lwm2m_engine_set_float32("10314/1/6043", 10.0e-6); // Measured Particle Size
+	lwm2m_engine_set_res_data("10314/0/5701", "ug/m3", 5, 0); // Sensor Units
+	lwm2m_engine_set_float32("10314/1/5604", &max_prtcl_float); // Max Range Value
+	lwm2m_engine_set_float32("10314/1/6043", &_prtcl_float100); // Measured Particle Size
 
 	return &prtcl_float100;
 }

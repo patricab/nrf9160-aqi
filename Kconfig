@@ -13,6 +13,23 @@ config APP_LWM2M_SERVER
 	help
 	  Choose the LwM2M server you wish to connect to.
 
+config APP_LWM2M_CLIENT
+	string "LwM2M client endpoint name"
+	help
+	  Choose the name of your client on the server.
+
+config LWM2M_IPSO_CONC_SENSOR
+	bool "Use Ozone/NO2 sensor"
+	default n
+	help
+	  Use gas sensor
+
+config LWM2M_OPENLX_SP_PRTCL_SENSOR
+	bool "Use PM sensor"
+	default n
+	help
+	  Use particle sensor
+
 config APP_HOLD_TIME_RSRP
 	int "Minimum time [s] between RSRP notification messages"
 	default 60

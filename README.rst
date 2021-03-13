@@ -42,6 +42,10 @@ It can also receive activation commands such as buzzer activation and light cont
      - FLIP
    * - Temperature
      - TEMP
+   * - Concentration
+     - CONC
+   * - Particulates
+     - PRTCL
    * - GPS coordinates
      - GPS
    * - Buzzer
@@ -71,7 +75,7 @@ The following instructions describe how to register your device and these instru
     * Client endpoint - nrf-{your Device IMEI}
     * Security mode - Pre-Shared Key
     * Identity: - nrf-{your Device IMEI}
-    * Key - 000102030405060708090a0b0c0d0e0f
+    * Key - 234aec5efc67aecf576c5aef765fc76e
 
 #. :ref:`Build and run the LwM2M Client sample <build_lwm2m>`.
 
@@ -90,7 +94,9 @@ Check and configure the following configuration options for the sample:
    The sample configuration specifies the LWM2M Server to be used.
    In this sample, you can set this option to ``leshan.eclipseprojects.io`` (`public Leshan Demo Server`_).
 
+.. option:: CONFIG_APP_LWM2M_CLIENT -LwM2M Client endpoint configuration
 
+   The client configuration specifies the name of your client on the server you must set it to something unique on the server like ``nrf-YOUR_DEVICE_IMEI``
 
 Configuration files
 ===================
@@ -137,7 +143,7 @@ The following instructions describe how to register your device and these instru
 
     * Security mode - Pre-Shared Key
     * Identity - nrf-{your device IMEI}
-    * Key - 000102030405060708090a0b0c0d0e0f
+    * Key - 234aec5efc67aecf576c5aef765fc76e
 
 #. In the :guilabel:`LWM2M Server` section, choose the desired configuration (``No security`` or ``Pre-Shared Key``).
    If you choose ``Pre-Shared Key``, add the values for ``Identity`` and ``Key`` fields (the configured Identity/Key need not match the Bootstrap Server configuration).
