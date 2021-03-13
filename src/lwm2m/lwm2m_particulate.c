@@ -11,8 +11,10 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(app_lwm2m_particulate, CONFIG_APP_LOG_LEVEL);
 
-/* use 5.5ppm if no sensor available */
-static struct float32_value prtcl_float = { 5, 500000 };
+// use 50.5ppm if no sensor available
+static struct float32_value prtcl_float25 = { 50, 500000 };
+// use 24.12ppm if no sensor available
+static struct float32_value prtcl_float100 = { 24, 120000};
 static const struct device *die_dev;
 static int32_t timestamp;
 
@@ -44,13 +46,13 @@ static int read_particulate(const struct device *prtcl_dev,
 }
 #endif
 
-static void *prtcl_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_inst_id,
+static void *prtcl_read_cb25(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_inst_id,
 			  size_t *data_len)
 {
-	int32_t ts;
+	//int32_t ts;
 
-	/* Only object instance 0 is currently used */
-	if (obj_inst_id != 0) {
+	/* Only object instance 0 and 1 is currently used */
+	if (obj_inst_id != 0 || 1) {
 		*data_len = 0;
 		return NULL;
 	}
@@ -58,31 +60,59 @@ static void *prtcl_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_i
 #if defined(CONFIG_PRTCL_NRF5_NAME)
 	/*
 	 * No need to check if read was successful, just reuse the
-	 * previous value which is already stored at prtcl_float.
+	 * previous value which is already stored at prtcl_float25.
 	 * This is because there is currently no way to report read_cb
 	 * failures to the LWM2M engine.
 	 */
-	read_particulate(die_dev, &prtcl_float);
+	read_particulate(die_dev, &prtcl_float25);
 #endif
-	lwm2m_engine_set_float32("10314/0/5700", &prtcl_float); // Sensor Value
-	*data_len = sizeof(prtcl_float);
+	lwm2m_engine_set_float32("10314/0/5700", &prtcl_float25); // Sensor Value
+	*data_len = sizeof(prtcl_float25);
 	lwm2m_engine_set_res_data("10314/0/5701", "ug/m3"); // Sensor Units
-	lwm2m_engine_set_float32("10314/0/5604", 1000.0); // Max Range Value
-	
+	lwm2m_engine_set_float32("10314/0/5604", 1.0e3); // Max Range Value
+	lwm2m_engine_set_float32("10314/0/6043", 2.5e-6); // Measured Particle Size
 
 	/* get current time from device 
 	lwm2m_engine_get_s32("3/0/13", &ts);
 	 set timestamp 
 	lwm2m_engine_set_s32("10314/0/5518", ts);*/
 
-	return &prtcl_float;
+	return &prtcl_float25;
 }
+
+static void *prtcl_read_cb100(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_inst_id,
+	size_t *data_len)
+{
+		// Only object instance 0 and 1 is currently used
+	if (obj_inst_id != 0 || 1) {
+		*data_len = 0;
+		return NULL;
+	}
+
+	#if defined(CONFIG_PRTCL_NRF5_NAME)
+		/*
+		 * No need to check if read was successful, just reuse the
+		 * previous value which is already stored at prtcl_float25.
+		 * This is because there is currently no way to report read_cb
+		 * failures to the LWM2M engine.
+		 */
+		read_particulate(die_dev, &prtcl_float25);
+	#endif
+	lwm2m_engine_set_float32("10314/1/5700", &prtcl_float100); // Sensor Value
+	*data_len = sizeof(prtcl_float100);
+	lwm2m_engine_set_res_data("10314/1/5701", "ug/m3"); // Sensor Units
+	lwm2m_engine_set_float32("10314/1/5604", 1.0e3); // Max Range Value
+	lwm2m_engine_set_float32("10314/1/6043", 10.0e-6); // Measured Particle Size
+
+	return &prtcl_float100;
+}
+
 
 int lwm2m_init_prtcl(void)
 {
 #if defined(CONFIG_PRTCL_NRF5_NAME)
 	die_dev = device_get_binding(CONFIG_PRTCL_NRF5_NAME);
-	LOG_INF("%s on-die particulate sensor %s",
+	LOG_INF("%s external particulate sensor %s",
 		die_dev ? "Found" : "Did not find", CONFIG_PRTCL_NRF5_NAME);
 #endif
 
@@ -91,7 +121,10 @@ int lwm2m_init_prtcl(void)
 	}
 
 	lwm2m_engine_create_obj_inst("10314/0");
-	lwm2m_engine_register_read_callback("10314/0/5700", prtcl_read_cb);
+	lwm2m_engine_register_read_callback("10314/0/5700", prtcl_read_cb25);
+
+	lwm2m_engine_create_obj_inst("10314/1");
+	lwm2m_engine_register_read_callback("10314/1/5700", prtcl_read_cb100);
 	//lwm2m_engine_set_res_data("10314/0/5518",
 				  //&timestamp, sizeof(timestamp), 0);
 	return 0;
