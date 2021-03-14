@@ -1,0 +1,7 @@
+# DGS-O3 gas sensor configuration options
+
+menuconfig DGSO3
+	bool "DGS-O3 gas sensor"
+	depends on SERIAL
+	help
+	  Enable driver for DGS-O3 UART-based gas sensor.
