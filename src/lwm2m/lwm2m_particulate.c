@@ -23,7 +23,7 @@ static struct float32_value prtcl_float100 = { 24, 120000};
 static const struct device *die_dev;
 //static int32_t timestamp;
 
-#if defined(CONFIG_PRTCL_NRF5_NAME)
+#if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
 static int read_particulate(const struct device *prtcl_dev,
 			    struct float32_value *float_val)
 {
@@ -31,13 +31,13 @@ static int read_particulate(const struct device *prtcl_dev,
 	struct sensor_value prtcl_val;
 	int ret;
 
-	ret = sensor_sample_fetch(prtcl_dev);
+	ret = sps30_sample_fetch(prtcl_dev);
 	if (ret) {
 		LOG_ERR("%s: I/O error: %d", name, ret);
 		return ret;
 	}
 
-	ret = sensor_channel_get(prtcl_dev, SENSOR_CHAN_DIE_PRTCL, &prtcl_val);
+	ret = sps30_channel_get(prtcl_dev, SENSOR_CHAN_DIE_PRTCL, &prtcl_val);
 	if (ret) {
 		LOG_ERR("%s: can't get data: %d", name, ret);
 		return ret;
@@ -62,7 +62,7 @@ static void *prtcl_read_cb25(uint16_t obj_inst_id, uint16_t res_id, uint16_t res
 		return NULL;
 	}
 
-#if defined(CONFIG_PRTCL_NRF5_NAME)
+#if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
 	/*
 	 * No need to check if read was successful, just reuse the
 	 * previous value which is already stored at prtcl_float25.
@@ -94,7 +94,7 @@ static void *prtcl_read_cb100(uint16_t obj_inst_id, uint16_t res_id, uint16_t re
 		return NULL;
 	}
 
-	#if defined(CONFIG_PRTCL_NRF5_NAME)
+	#if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
 		/*
 		 * No need to check if read was successful, just reuse the
 		 * previous value which is already stored at prtcl_float25.
@@ -115,10 +115,10 @@ static void *prtcl_read_cb100(uint16_t obj_inst_id, uint16_t res_id, uint16_t re
 
 int lwm2m_init_prtcl(void)
 {
-#if defined(CONFIG_PRTCL_NRF5_NAME)
-	die_dev = device_get_binding(CONFIG_PRTCL_NRF5_NAME);
+#if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
+	die_dev = device_get_binding(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR);
 	LOG_INF("%s external particulate sensor %s",
-		die_dev ? "Found" : "Did not find", CONFIG_PRTCL_NRF5_NAME);
+		die_dev ? "Found" : "Did not find", CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR);
 #endif
 
 	if (!die_dev) {
