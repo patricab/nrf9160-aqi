@@ -11,7 +11,7 @@ set(PM_STATIC_YML_FILE
   )
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(lwm2m_client)
+project(nrf9160-aqi)
 zephyr_compile_definitions(PROJECT_NAME=${PROJECT_NAME})
 
 # NORDIC SDK APP START

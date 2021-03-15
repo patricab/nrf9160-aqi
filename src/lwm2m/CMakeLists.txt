@@ -32,6 +32,9 @@ target_sources_ifdef(CONFIG_UI_BUTTON
 target_sources_ifdef(CONFIG_LWM2M_IPSO_ACCELEROMETER
 	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_accelerometer.c
 	)
-target_sources_ifdef(CONFIG_LWM2M_IPSO_CONCENTRATION
+target_sources_ifdef(CONFIG_LWM2M_IPSO_CONC_SENSOR
 	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_concentration.c
+	)
+target_sources_ifdef(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR
+	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_particulate.c
 	)
