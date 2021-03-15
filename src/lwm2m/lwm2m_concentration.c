@@ -16,7 +16,7 @@ static struct float32_value conc_float = { 5, 500000 };
 static const struct device *die_dev;
 static int32_t timestamp;
 
-#if defined(CONFIG_CONC_NRF5_NAME)
+#if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
 static int read_concentration(const struct device *conc_dev,
 			    struct float32_value *float_val)
 {
@@ -55,7 +55,7 @@ static void *conc_read_cb(uint16_t obj_inst_id, uint16_t res_id,
 		return NULL;
 	}
 
-#if defined(CONFIG_CONC_NRF5_NAME)
+#if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
 	/*
 	 * No need to check if read was successful, just reuse the
 	 * previous value which is already stored at conc_float.
@@ -76,10 +76,10 @@ static void *conc_read_cb(uint16_t obj_inst_id, uint16_t res_id,
 
 int lwm2m_init_conc(void)
 {
-#if defined(CONFIG_CONC_NRF5_NAME)
-	die_dev = device_get_binding(CONFIG_CONC_NRF5_NAME);
+#if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
+	die_dev = device_get_binding(CONFIG_LWM2M_IPSO_CONC_SENSOR);
 	LOG_INF("%s on-die concentration sensor %s",
-		die_dev ? "Found" : "Did not find", CONFIG_CONC_NRF5_NAME);
+		die_dev ? "Found" : "Did not find", CONFIG_LWM2M_IPSO_CONC_SENSOR);
 #endif
 
 	if (!die_dev) {
