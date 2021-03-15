@@ -1,14 +1,14 @@
 //STEP 1. Import required packages
 import java.sql.*;
 
-public class JDBCExample {
+public class JavaDBCom {
+   private String user;
+   private String pass;
+
    // JDBC driver name and database URL
    static final String JDBC_DRIVER = "org.postgresql.Driver";  
    static final String DB_URL = "jdbc:postgresql://localhost:5432/airqdb";
 
-   //  Database credentials
-   static final String USER = "airq";
-   static final String PASS = "airqpass";
 
    public static void insert(String ep, int obj, int inst, int res, double val) {
       Statement stmt = null;
@@ -16,7 +16,7 @@ public class JDBCExample {
       try {
          Class.forName("org.postgresql.Driver");
          System.out.println("Connecting to database...");
-         conn = DriverManager.getConnection(DB_URL, USER, PASS);
+         conn = DriverManager.getConnection(DB_URL, user, pass);
          System.out.println("INSERT data...");
          stmt = conn.createStatement();
          
@@ -32,12 +32,6 @@ public class JDBCExample {
       } catch(Exception e){
          //Handle errors for Class.forName
          e.printStackTrace();
-      } finally {
-      }//end finally try
-   }
-   
-   public static void main(String[] args) {
-      insert("airq", 3303, 0, 5700, 23.67);
-      System.out.println("Goodbye!");//end main
+      }
    }
 }//end JDBCExample

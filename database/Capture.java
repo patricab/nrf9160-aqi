@@ -18,6 +18,9 @@ public class Capture
 		List<Client> clients = coms.getCLients();
 		traverseClients();
 		coms.logObservation(clients.get(0).getEndpoint(), 3303, 0, 5700);
+
+		JavaDBCom airq = new JavaDBCom("airq", "airqpass");
+		airq.insert(clients.get(0).getEndpoint(), 3303, 0, 5700, 13.37);
 	}
 
 	private void traverseClients(List<Client> clients)
