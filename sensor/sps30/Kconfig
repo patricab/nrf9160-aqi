@@ -1,0 +1,8 @@
+# SPS30 particulate matter sensor configuration options
+
+menuconfig SPS30
+	bool "SPS30 particulate matter sensor"
+	depends on SERIAL 
+	depends on I2C
+	help
+	  Enable driver for SPS30 UART/I2C-based particulate matter sensor.

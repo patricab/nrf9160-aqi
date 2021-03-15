@@ -44,8 +44,8 @@ static int read_concentration(const struct device *conc_dev,
 }
 #endif
 
-static void *conc_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_inst_id,
-			  size_t *data_len)
+static void *conc_read_cb(uint16_t obj_inst_id, uint16_t res_id,
+                          uint16_t res_inst_id, size_t *data_len)
 {
 	int32_t ts;
 
