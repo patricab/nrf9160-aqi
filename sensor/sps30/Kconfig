@@ -1,6 +1,6 @@
 # SPS30 particulate matter sensor configuration options
 
-menuconfig SPS30
+config SPS30
 	bool "SPS30 particulate matter sensor"
 	depends on SERIAL 
 	depends on I2C
