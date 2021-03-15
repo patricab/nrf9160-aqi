@@ -239,6 +239,6 @@ int lwm2m_init_colour(void)
 	lwm2m_engine_create_obj_inst("3335/0");
 	lwm2m_engine_register_read_callback("3335/0/5706", string_values);
 	lwm2m_engine_set_res_data("3335/0/5518",
-		&timestamp, sizeof(timestamp), 0);
+				  &timestamp, sizeof(timestamp), 0);
 	process(dev);
 }
