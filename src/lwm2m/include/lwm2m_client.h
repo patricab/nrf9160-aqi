@@ -49,6 +49,10 @@ int lwm2m_init_temp(void);
 int lwm2m_init_conc(void);
 #endif
 
+#if defined(CONFIG_LWM2M_IPSO_COLOUR_SENSOR)
+int lwm2m_init_colour(void);
+#endif
+
 #if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
 int lwm2m_init_prtcl(void);
 #endif
