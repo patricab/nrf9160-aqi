@@ -36,9 +36,10 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define PRTCL_MAX_MEASURED_VALUE_ID              5602
 #define PRTCL_MAX_RANGE_VALUE_ID                 5604
 #define PRTCL_RESET_MIN_MAX_MEASURED_VALUES_ID   5605
+#define PRTCL_MEASURED_PARTICLE_SIZE_ID          6043
+
 #if ADD_TIMESTAMPS
 #define PRTCL_TIMESTAMP_ID                       5518
-
 #define PRTCL_MAX_ID		8
 #else  /* !ADD_TIMESTAMPS */
 #define PRTCL_MAX_ID		7
@@ -62,6 +63,7 @@ static float32_value_t min_measured_value[MAX_INSTANCE_COUNT];
 static float32_value_t max_measured_value[MAX_INSTANCE_COUNT];
 static float32_value_t min_range_value[MAX_INSTANCE_COUNT];
 static float32_value_t max_range_value[MAX_INSTANCE_COUNT];
+static float32_value_t measured_particle_size[MAX_INSTANCE_COUNT];
 
 static struct lwm2m_engine_obj temp_sensor;
 static struct lwm2m_engine_obj_field fields[] = {
@@ -72,6 +74,7 @@ static struct lwm2m_engine_obj_field fields[] = {
 	OBJ_FIELD_DATA(PRTCL_MIN_RANGE_VALUE_ID, R_OPT, FLOAT32),
 	OBJ_FIELD_DATA(PRTCL_MAX_RANGE_VALUE_ID, R_OPT, FLOAT32),
 	OBJ_FIELD_EXECUTE_OPT(PRTCL_RESET_MIN_MAX_MEASURED_VALUES_ID),
+	OBJ_FIELD_DATA(PRTCL_MEASURED_PARTICLE_SIZE_ID, R, FLOAT32),
 #if ADD_TIMESTAMPS
 	OBJ_FIELD_DATA(PRTCL_TIMESTAMP_ID, RW_OPT, TIME),
 #endif
@@ -113,6 +116,14 @@ static int reset_min_max_measured_values_cb(uint16_t obj_inst_id,
 	}
 
 	return -ENOENT;
+}
+
+static int measured_particle_size(uint16_t obj_inst_id, int index)
+{
+	measured_particle_size[index].val1 = sensor_value[index].val1;
+	measured_particle_size[index].val2 = sensor_value[index].val2;
+	NOTIFY_OBSERVER(IPSO_OBJECT_PRTCL_SENSOR_ID, obj_inst_id,
+			PRTCL_MEASURED_PARTICLE_SIZE_ID);
 }
 
 static int sensor_value_write_cb(uint16_t obj_inst_id,
@@ -195,6 +206,8 @@ static struct lwm2m_engine_obj_inst *prtcl_sensor_create(uint16_t obj_inst_id)
 	min_range_value[index].val2 = 0;
 	max_range_value[index].val1 = 0;
 	max_range_value[index].val2 = 0;
+	measured_particle_size[index].val1 = 5;
+	measured_particle_size[index].val2 = 0;
 
 	(void)memset(res[index], 0,
 		     sizeof(res[index][0]) * ARRAY_SIZE(res[index]));
@@ -221,6 +234,9 @@ static struct lwm2m_engine_obj_inst *prtcl_sensor_create(uint16_t obj_inst_id)
 			  sizeof(*max_range_value));
 	INIT_OBJ_RES_EXECUTE(PRTCL_RESET_MIN_MAX_MEASURED_VALUES_ID,
 			     res[index], i, reset_min_max_measured_values_cb);
+	INIT_OBJ_RES_DATA(PRTCL_MEASURED_PARTICLE_SIZE_ID,
+			  res_inst[Index], j, &measured_particle_size[index],
+			  sizeof(*measured_particle_size));
 #if ADD_TIMESTAMPS
 	INIT_OBJ_RES_OPTDATA(PRTCL_TIMESTAMP_ID, res[index], i,
 			     res_inst[index], j);
