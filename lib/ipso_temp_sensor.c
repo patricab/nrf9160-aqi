@@ -30,15 +30,15 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #endif
 
 /* Server resource IDs */
-#define TEMP_SENSOR_VALUE_ID			5700
-#define TEMP_UNITS_ID				5701
-#define TEMP_MIN_MEASURED_VALUE_ID		5601
-#define TEMP_MAX_MEASURED_VALUE_ID		5602
-#define TEMP_MIN_RANGE_VALUE_ID			5603
-#define TEMP_MAX_RANGE_VALUE_ID			5604
-#define TEMP_RESET_MIN_MAX_MEASURED_VALUES_ID	5605
+#define TEMP_SENSOR_VALUE_ID                    5700
+#define TEMP_UNITS_ID                           5701
+#define TEMP_MIN_MEASURED_VALUE_ID              5601
+#define TEMP_MAX_MEASURED_VALUE_ID              5602
+#define TEMP_MIN_RANGE_VALUE_ID                 5603
+#define TEMP_MAX_RANGE_VALUE_ID                 5604
+#define TEMP_RESET_MIN_MAX_MEASURED_VALUES_ID   5605
 #if ADD_TIMESTAMPS
-#define TEMP_TIMESTAMP_ID			5518
+#define TEMP_TIMESTAMP_ID                       5518
 
 #define TEMP_MAX_ID		8
 #else  /* !ADD_TIMESTAMPS */
