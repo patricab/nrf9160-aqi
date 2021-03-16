@@ -414,6 +414,8 @@ public class LeshanServerDemo {
 
         // Create DTLS Config
         DtlsConnectorConfig.Builder dtlsConfig = new DtlsConnectorConfig.Builder();
+        dtlsConfig.setMaxRetransmissions(42);
+        dtlsConfig.setRetransmissionTimeout(1000);
         dtlsConfig.setRecommendedCipherSuitesOnly(!supportDeprecatedCiphers);
 
         X509Certificate serverCertificate = null;
