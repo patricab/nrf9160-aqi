@@ -24,6 +24,12 @@ zephyr_include_directories(src)
 zephyr_library_include_directories(
   src/lwm2m
   src/ui
+  sensor/bh1749
+  sensor/bme680
+  sensor/dgso3
+  sensor/sensor_sim
+  sensor/sps30
+  lib
   )
 
 # Application sources
