@@ -146,6 +146,9 @@ static int lwm2m_setup(void)
 #if defined(CONFIG_LWM2M_IPSO_TEMP_SENSOR)
 	lwm2m_init_temp();
 #endif
+#if defined(CONFIG_LWM2M_IPSO_HUMIDITY_SENSOR)
+	lwm2m_init_hum();
+#endif
 #if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
 	lwm2m_init_conc();
 #endif
@@ -161,6 +164,7 @@ static int lwm2m_setup(void)
 #if defined(CONFIG_LWM2M_IPSO_ACCELEROMETER)
 	lwm2m_init_accel();
 #endif
+   lwm2m_init_gas_res();
 	return 0;
 }
 
