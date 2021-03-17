@@ -25,6 +25,9 @@ int lwm2m_init_device(char *serial_num);
 /* Location */
 int lwm2m_init_location(void);
 
+/* Gas (Resistance) */
+int lwm2m_init_gas_res(void);
+
 #if defined(CONFIG_LWM2M_FIRMWARE_UPDATE_OBJ_SUPPORT)
 void *firmware_read_cb(uint16_t obj_inst_id, size_t *data_len);
 int lwm2m_init_firmware(void);
@@ -43,6 +46,10 @@ int lwm2m_init_light_control(void);
 
 #if defined(CONFIG_LWM2M_IPSO_TEMP_SENSOR)
 int lwm2m_init_temp(void);
+#endif
+
+#if defined(CONFIG_LWM2M_IPSO_HUMIDITY_SENSOR)
+int lwm2m_init_hum(void);
 #endif
 
 #if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)

@@ -16,14 +16,12 @@ LOG_MODULE_REGISTER(app_lwm2m_temp, CONFIG_APP_LOG_LEVEL);
 /* use 25.5C if no sensor available */
 static struct float32_value temp_float = { 25, 500000 };
 static const struct device *die_dev;
-/* const struct device  */
 
 static int32_t timestamp;
 
 static int read_temperature(const struct device *temp_dev,
 			    struct float32_value *float_val)
 {
-	/* const char *name = temp_dev->config->name; */
 	struct sensor_value temp;
 	int ret;
 
@@ -39,7 +37,6 @@ static int read_temperature(const struct device *temp_dev,
 		return ret;
 	}
 
-	/* LOG_DBG("%s: read %d.%d C", name, temp.val1, temp.val2); */
 	float_val->val1 = temp.val1;
 	float_val->val2 = temp.val2;
 
@@ -70,12 +67,6 @@ static void *temp_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_in
 
 int lwm2m_init_temp(void)
 {
-/* #if defined(CONFIG_TEMP_NRF5_NAME) */
-/* 	die_dev = device_get_binding(CONFIG_TEMP_NRF5_NAME); */
-/* 	LOG_INF("%s on-die temperature sensor %s", */
-/* 		die_dev ? "Found" : "Did not find", CONFIG_TEMP_NRF5_NAME); */
-/* #endif */
-
    die_dev = device_get_binding(DT_LABEL(DT_INST(0, bosch_bme680)));
 	if (!die_dev) {
 		LOG_ERR("No temperature device found.");
