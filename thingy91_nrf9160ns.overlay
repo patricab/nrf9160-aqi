@@ -8,8 +8,10 @@
         aliases {
                 temp-sensor = &bme680;
                 humidity-sensor = &bme680;
+                /*
                 conc-sensor = &dgso3;
                 prtcl-sensor = &sps30;
+                */
                 accelerometer = &adxl362;
         };
 };
@@ -23,6 +25,7 @@
         adxl362: adxl362@0 {};
 };
 
+/*
 &i2c4 {
         sps30: sps30@69 {};
 };
@@ -30,3 +33,4 @@
 &uart5 {
          dgso3: dgso3@0 {};
 };
+*/
