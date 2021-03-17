@@ -8,11 +8,10 @@
         aliases {
                 temp-sensor = &bme680;
                 humidity-sensor = &bme680;
-<<<<<<< HEAD
-=======
+                /*
                 conc-sensor = &dgso3;
                 prtcl-sensor = &sps30;
->>>>>>> e9c80e4... build success no new object in server
+                */
                 accelerometer = &adxl362;
         };
 };
@@ -21,16 +20,11 @@
         bme680: bme680@76 {};
 };
 
-<<<<<<< HEAD
-&spi3 {
-        adxl362: adxl362@0 {};
-};
-=======
-
 &spi3 {
         adxl362: adxl362@0 {};
 };
 
+/*
 &i2c4 {
         sps30: sps30@69 {};
 };
@@ -38,4 +32,4 @@
 &uart5 {
          dgso3: dgso3@0 {};
 };
->>>>>>> e9c80e4... build success no new object in server
+*/
