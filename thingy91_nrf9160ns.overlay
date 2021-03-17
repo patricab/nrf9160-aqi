@@ -17,8 +17,13 @@
 };
 
 &i2c2 {
-        bme680: bme680@76 {};
+        bme680: bme680@76 {
+          compatible = "bosch,bme680";
+          label = "BME680";
+          reg = <0x76>;
+        };
 };
+
 
 &spi3 {
         adxl362: adxl362@0 {};
