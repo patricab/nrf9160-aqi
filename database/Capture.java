@@ -17,7 +17,7 @@ public class Capture
 
 
 		final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-		executorService.scheduleAtFixedRate(Capture::logAll, 0, 1, TimeUnit.MINUTES);
+		executorService.scheduleAtFixedRate(Capture::logAll, 0, 30, TimeUnit.SECONDS);
 	}
 
 
@@ -37,6 +37,9 @@ public class Capture
 			{
 				switch (clients.get(i).getObjectLinks().get(j).getUrl())
 				{
+				case "/3300/0":
+					insertDB(airqdb, coms, endpoint, ip, regID, 3300, 0, 5700);
+					break;
 				case "/3303/0":
 					insertDB(airqdb, coms, endpoint, ip, regID, 3303, 0, 5700);
 					break;
@@ -47,7 +50,7 @@ public class Capture
 					insertDB(airqdb, coms, endpoint, ip, regID, 3325, 0, 5700);
 					break;
 				case "/3335/0":
-					insertDB(airqdb, coms, endpoint, ip, regID, 3335, 0, 5700);
+					insertDB(airqdb, coms, endpoint, ip, regID, 3335, 0, 5706);
 					break;
 				case "/10314/0":
 					insertDB(airqdb, coms, endpoint, ip, regID, 10314, 0, 5700);
@@ -60,7 +63,10 @@ public class Capture
 	private static void insertDB(JavaDBCom database, RESTcoms rest, String endpoint,
 	                             String ip, String regID, int object, int instance, int resource)
 	{
-		database.insert(endpoint, ip, regID, object, instance, resource, 
-		                rest.logObservation(endpoint, object, instance, resource));
+		float value = rest.logObservation(endpoint, object, instance, resource);
+		if (value != -333)
+		{
+			database.insert(endpoint, ip, regID, object, instance, resource, value);
+		}
 	}
 }

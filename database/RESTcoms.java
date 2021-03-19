@@ -34,7 +34,7 @@ public class RESTcoms {
 			return observation.getValue();
 		} catch (IOException error) {
 			System.out.println("Error response" + error.toString());
-			return -3;
+			return -333;
 		}
 	}
 
