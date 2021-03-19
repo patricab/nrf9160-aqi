@@ -14,11 +14,11 @@ CREATE TABLE log (
 	"time" TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"ep" VARCHAR(64) NOT NULL,
 	"ip" VARCHAR(15),
-	"port" INT,
+	"regid" VARCHAR(10),
 	"object" INT NOT NULL,
 	"instance" INT DEFAULT 0,
 	"resource" INT DEFAULT 0,
-	"value" TEXT
+	"value" DOUBLE PRECISION
 );
 
 SELECT create_hypertable('observation', 'time');

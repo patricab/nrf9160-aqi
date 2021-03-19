@@ -1,12 +1,5 @@
 import java.util.*;
 import java.lang.*;
-import java.io.IOException;
-
-import okhttp3.*;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.databind.node.*;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 public class Client {
 	private String endpoint;
@@ -40,30 +33,30 @@ public class Client {
 	}
 
 	public void setEndpoint(String endpoint) {
-        this.endpoint = endpoint;
-  	}
+		this.endpoint = endpoint;
+	}
 
-  	public void setRegistrationId(String registrationId) {
-  		this.registrationId = registrationId;
-  	}
+	public void setRegistrationId(String registrationId) {
+		this.registrationId = registrationId;
+	}
 
-  	public void setRegistrationDate(String registrationDate) {
-  		this.registrationDate = registrationDate;
-  	}
+	public void setRegistrationDate(String registrationDate) {
+		this.registrationDate = registrationDate;
+	}
 
-  	public void setAddress(String address) {
-  		this.address = address;
-  	}
+	public void setAddress(String address) {
+		this.address = address;
+	}
 
-  	public void setLifetime(int lifetime) {
-  		this.lifetime = lifetime;
-  	}
+	public void setLifetime(int lifetime) {
+		this.lifetime = lifetime;
+	}
 
-  	public void setRootPath(String rootPath) {
-  		this.rootPath = rootPath;
-  	}
+	public void setRootPath(String rootPath) {
+		this.rootPath = rootPath;
+	}
 
-  	public void setSecure(Boolean secure) {
-  		this.secure = secure;
-  	}
+	public void setSecure(Boolean secure) {
+		this.secure = secure;
+	}
 }
