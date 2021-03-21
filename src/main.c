@@ -164,7 +164,8 @@ static int lwm2m_setup(void)
 #if defined(CONFIG_LWM2M_IPSO_ACCELEROMETER)
 	lwm2m_init_accel();
 #endif
-   lwm2m_init_gas_res();
+lwm2m_init_gas_res();
+lwm2m_init_gas();
 	return 0;
 }
 

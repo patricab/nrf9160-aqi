@@ -8,6 +8,9 @@ zephyr_include_directories(include)
 target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_device.c)
 target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_security.c)
 
+target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_gas_res.c)
+target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_gas.c)
+
 #target_sources_ifdef(CONFIG_LWM2M_LOCATION_OBJ_SUPPORT
 #	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_location.c
 #	)
@@ -26,7 +29,6 @@ target_sources_ifdef(CONFIG_LWM2M_IPSO_TEMP_SENSOR
 target_sources_ifdef(CONFIG_LWM2M_IPSO_HUMIDITY_SENSOR
 	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_humidity.c
 	)
-target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_gas_res.c)
 #target_sources_ifdef(CONFIG_UI_BUZZER
 #	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_buzzer.c
 #	)
