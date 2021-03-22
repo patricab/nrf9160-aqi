@@ -1,14 +1,6 @@
-zephyr_include_directories(include)
+cmake_minimum_required(VERSION 3.13.1)
 
-target_sources_ifdef(CONFIG_LWM2M_IPSO_TEMP_SENSOR
-	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ipso_temp_sensor.c
-	)
-target_sources_ifdef(CONFIG_LWM2M_IPSO_CONC_SENSOR
-	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ipso_conc_sensor.c
-	)
-target_sources_ifdef(CONFIG_LWM2M_IPSO_COLOUR_SENSOR
-	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ipso_colour_sensor.c
-	)
-target_sources_ifdef(CONFIG_LWM2M_OPENLX_SP_SENSOR
-	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/openlx_sp_prtcl_sensor.c
-	)
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+project(lib)
+
+target_sources(app PRIVATE dgso3.c)
