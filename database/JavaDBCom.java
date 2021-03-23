@@ -17,7 +17,7 @@ public class JavaDBCom {
 	static final String DB_URL = "jdbc:postgresql://localhost:5432/airqdb";
 
 
-	public static void insertTS(String table, LocalDateTime time, String ep, int obj, int inst, int res, double val)
+	public static void insertTS(String table, ZonedDateTime time, String ep, int obj, int inst, int res, double val)
 	{
 		Statement stmt = null;
 		Connection conn = null;

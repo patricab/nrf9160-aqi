@@ -22,24 +22,35 @@ public class RESTcoms {
 	}
 
 
-	public void setTimestamp(String ep) throws IOException {
-		OkHttpClient client = new OkHttpClient();
+	public void setTimestamp(String ep) {
+		Response response =null;
 
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd\'T\'HH:mm:ss\'+\'HH:mm");
-		ZonedDateTime timestamp = ZonedDateTime.now();
-		String json = "{\"id\":13,\"value\":" + formatter.format(timestamp) + "}";
+		try {
+			OkHttpClient client = new OkHttpClient();
 
-		RequestBody body = RequestBody.create(MediaType.parse("application/json"), json);
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd\'T\'HH:mm:ss\'+\'HH:mm");
+			ZonedDateTime timestamp = ZonedDateTime.now();
+			String json = "{\"id\":13,\"value\":" + formatter.format(timestamp) + "}";
+			            /*+ "{\"id\":14,\"value\":" + "\"+01:00\"},"
+			            + "{\"id\":15,\"value\":" + "\"Central European Standard Time\"}";*/
 
-		Request request = new Request.Builder()
-			.url(url + "/api/clients/" + ep + "/3/0/13")
-			.post(body)
-			.build();
+			RequestBody body = RequestBody.create(MediaType.parse("application/json"), json);
 
-		Call call = client.newCall(request);
-		Response response = call.execute();
+			Request request = new Request.Builder()
+				.url(url + "/api/clients/" + ep + "/3/0/13")
+				.post(body)
+				.build();
 
-		assertThat(response.code(), equalTo(200));
+			Call call = client.newCall(request);
+			response = call.execute();
+
+			assertThat(response.code(), equalTo(200));
+
+		} catch (IOException e) {
+			System.out.println("Error in setTimestamp: "+ e.toString());
+		} finally {
+			response.body().close();
+		}
 	}
 
 
@@ -61,7 +72,7 @@ public class RESTcoms {
 			readObservation(observation);
 			return observation.getValue();
 		} catch (IOException error) {
-			System.out.println("Error response" + error.toString());
+			System.out.println("Error in logObservation: " + error.toString());
 			return "error";
 		}
 	}
@@ -82,7 +93,7 @@ public class RESTcoms {
 			traverseClients(clients);
 			return clients;
 		} catch (IOException e) {
-			System.out.println("Error response" + e.toString());
+			System.out.println("Error in getCLients: " + e.toString());
 			return null;
 		}
 	}
