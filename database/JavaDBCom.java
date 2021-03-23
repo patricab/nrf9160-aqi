@@ -1,5 +1,6 @@
 //STEP 1. Import required packages
 import java.sql.*;
+import java.time.*;
 
 public class JavaDBCom {
 	private static String user;
@@ -16,7 +17,7 @@ public class JavaDBCom {
 	static final String DB_URL = "jdbc:postgresql://localhost:5432/airqdb";
 
 
-	public static void insert(String ep, int obj, int inst, int res, double val)
+	public static void insertTS(String table, LocalDateTime time, String ep, int obj, int inst, int res, double val)
 	{
 		Statement stmt = null;
 		Connection conn = null;
@@ -28,11 +29,12 @@ public class JavaDBCom {
 			System.out.println("INSERT data...");
 			stmt = conn.createStatement();
 			
-			String sql = "INSERT INTO log(ep, object, instance, resource, value) " + 
-			             "VALUES('" + ep + "', " + obj + ", " + inst + ", " + res + ", " + val + ");";
+			String sql = "INSERT INTO "+ table + "(time, ep, object, instance, resource, value) " + 
+			             "VALUES('" + time + "', '" + ep + "', " + obj + ", " + inst + ", " + res + ", " + val + ");";
 			stmt.executeUpdate(sql);
-			System.out.println("INSERT data successfully...");
+			System.out.println("INSERT data successfully!");
 			stmt.close();//finally block used to close resources
+		
 		}
 		catch(SQLException se)
 		{
@@ -46,7 +48,7 @@ public class JavaDBCom {
 		}
 	}
 
-	public static void insert(String ep, String ip, String regID, int obj, int inst, int res, double val)
+	public static void insert(String table, String ep, int obj, int inst, int res, double val)
 	{
 		Statement stmt = null;
 		Connection conn = null;
@@ -58,8 +60,8 @@ public class JavaDBCom {
 			System.out.println("INSERT data...");
 			stmt = conn.createStatement();
 			
-			String sql = "INSERT INTO log(ep, ip, regid, object, instance, resource, value) " + 
-			             "VALUES('" + ep + "', '" + ip + "', '" + regID + "', " + obj + ", " + inst + ", " + res + ", " + val + ");";
+			String sql = "INSERT INTO "+ table + "(ep, object, instance, resource, value) " + 
+			             "VALUES('" + ep + "', " + obj + ", " + inst + ", " + res + ", " + val + ");";
 			stmt.executeUpdate(sql);
 			System.out.println("INSERT data successfully!");
 			stmt.close();//finally block used to close resources
@@ -77,3 +79,4 @@ public class JavaDBCom {
 		}
 	}
 }
+ /*String ip, String regID,*/

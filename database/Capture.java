@@ -1,8 +1,12 @@
 //import OkHttpClient.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.text.*;
 import java.lang.*;
 import java.io.IOException;
+import java.sql.*;
+import java.time.*;
+import java.time.format.*;
 
 import okhttp3.*;
 import com.fasterxml.jackson.databind.*;
@@ -33,40 +37,63 @@ public class Capture
 			String ip = clients.get(i).getAddress();
 			String regID = clients.get(i).getRegistrationId();
 
+			try {
+				coms.setTimestamp(endpoint);
+			} catch (IOException e) {
+				System.out.println(e.toString());
+			}
+
 			for(int j = 0; j < clients.get(i).getObjectLinks().size(); j++)
 			{
 				switch (clients.get(i).getObjectLinks().get(j).getUrl())
 				{
-				case "/3300/0":
-					insertDB(airqdb, coms, endpoint, ip, regID, 3300, 0, 5700);
+				/*case "/6/0": // Location
+					insertDB(airqdb, coms, "observation", endpoint, 6, 0, 1);
+					break;*/
+				case "/3300/0": // Generic Sensor VOC Ohm
+					insertDB(airqdb, coms, "observation", endpoint, 3300, 0, 5700);
 					break;
-				case "/3303/0":
-					insertDB(airqdb, coms, endpoint, ip, regID, 3303, 0, 5700);
+				case "/3303/0": // Temperature Sensor °C
+					insertDB(airqdb, coms, "observation", endpoint, 3303, 0, 5700);
 					break;
-				case "/3304/0":
-					insertDB(airqdb, coms, endpoint, ip, regID, 3304, 0, 5700);
+				case "/3304/0": // Humidity Sensor %RH
+					insertDB(airqdb, coms, "observation", endpoint, 3304, 0, 5700);
 					break;
-				case "/3325/0":
-					insertDB(airqdb, coms, endpoint, ip, regID, 3325, 0, 5700);
+				case "/3325/0": // Concentration Sensor µg/m3
+					insertDB(airqdb, coms, "observation", endpoint, 3325, 0, 5700);
 					break;
-				case "/3335/0":
-					insertDB(airqdb, coms, endpoint, ip, regID, 3335, 0, 5706);
+				case "/3335/0": // Colour sensor
+					insertDB(airqdb, coms, "observation", endpoint, 3335, 0, 5706);
 					break;
-				case "/10314/0":
-					insertDB(airqdb, coms, endpoint, ip, regID, 10314, 0, 5700);
+				case "/10314/0": // Particulate sensor µg/m3
+					insertDB(airqdb, coms, "observation", endpoint, 10314, 0, 5700);
 					break;
 				}
 			}
 		}
 	}
 
-	private static void insertDB(JavaDBCom database, RESTcoms rest, String endpoint,
-	                             String ip, String regID, int object, int instance, int resource)
+	private static void insertDB(JavaDBCom database, RESTcoms rest, String table,
+	                             String endpoint, int object, int instance, int resource)
 	{
-		float value = rest.logObservation(endpoint, object, instance, resource);
-		if (value != -333)
-		{
-			database.insert(endpoint, ip, regID, object, instance, resource, value);
+		try {
+			String value = rest.logObservation(endpoint, object, instance, resource);
+			String time = rest.logObservation(endpoint, object, instance, 5518);
+		
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd\'T\'HH:mm:ss\'Z\'");
+			LocalDateTime timestamp = LocalDateTime.parse(time, formatter);
+			timestamp.plusSeconds(Long.parseLong(time));
+
+			if (value.equals("error")) {
+			} else if ( time.equals("error")) {
+				database.insert(table, endpoint, object, instance, resource, Float.parseFloat(value));
+			} else {
+				database.insertTS(table, timestamp, endpoint, object, instance, resource, Float.parseFloat(value));
+			}
+		} catch (Exception e) {
+			System.out.println(e.toString());
 		}
 	}
 }
+
+/*String ip, String regID,*/

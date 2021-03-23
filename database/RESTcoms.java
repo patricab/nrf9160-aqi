@@ -1,8 +1,14 @@
 import java.util.*;
 import java.lang.*;
+import java.lang.Object.*;
 import java.io.IOException;
+import java.time.*;
+import java.time.format.*;
 
 import okhttp3.*;
+import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.*;
+import org.junit.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.node.*;
@@ -15,7 +21,29 @@ public class RESTcoms {
 		this.url = url;
 	}
 
-	public float logObservation(String ep, int object, int instance, int resource) {
+
+	public void setTimestamp(String ep) throws IOException {
+		OkHttpClient client = new OkHttpClient();
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd\'T\'HH:mm:ss\'+\'HH:mm");
+		ZonedDateTime timestamp = ZonedDateTime.now();
+		String json = "{\"id\":13,\"value\":" + formatter.format(timestamp) + "}";
+
+		RequestBody body = RequestBody.create(MediaType.parse("application/json"), json);
+
+		Request request = new Request.Builder()
+			.url(url + "/api/clients/" + ep + "/3/0/13")
+			.post(body)
+			.build();
+
+		Call call = client.newCall(request);
+		Response response = call.execute();
+
+		assertThat(response.code(), equalTo(200));
+	}
+
+
+	public String logObservation(String ep, int object, int instance, int resource) {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		OkHttpClient res = new OkHttpClient();
@@ -34,9 +62,10 @@ public class RESTcoms {
 			return observation.getValue();
 		} catch (IOException error) {
 			System.out.println("Error response" + error.toString());
-			return -333;
+			return "error";
 		}
 	}
+
 
 	public List<Client> getCLients() {
 		ObjectMapper mapper = new ObjectMapper();
@@ -58,6 +87,7 @@ public class RESTcoms {
 		}
 	}
 
+
 	private void traverseClients(List<Client> clients){
 		for(int i = 0; i < clients.size(); i++) {
 			System.out.println("ep:        " + clients.get(i).getEndpoint());			
@@ -70,6 +100,7 @@ public class RESTcoms {
 		}
 		System.out.println("");
 	}
+
 
 	private void readObservation(Observation observation) {
 		System.out.println("ID: " + observation.getId() + " Value: " + observation.getValue());

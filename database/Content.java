@@ -2,13 +2,13 @@
 
 public class Content {
 	private int id;
-	private float value;
+	private String value;
 
 	public void setId(int id) {
 		this.id = id;
 	}
 
-	public void setValue(float value) {
+	public void setValue(String value) {
 		this.value = value;
 	}
 
@@ -16,7 +16,7 @@ public class Content {
  		return id;
 	}
 
-	public float getValue() {
+	public String getValue() {
  		return value;
 	}
 }

@@ -10,7 +10,7 @@ public class Observation { //static
 		return content.getId();
 	}
 
-	public float getValue() {
+	public String getValue() {
 		return content.getValue();
 	}
 
