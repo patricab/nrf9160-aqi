@@ -21,13 +21,11 @@ LOG_MODULE_REGISTER(SPS30, CONFIG_SENSOR_LOG_LEVEL);
 #define CFG_SPS30_SERIAL_TIMEOUT 1000
 
 struct sps30_measurement {
-	const struct device *i2c_dev;
-    uint16_t mc_1p0;
-    uint16_t mc_2p5;
-    uint16_t mc_4p0;
-    uint16_t mc_10p0;
+	const struct device *pms_dev;
+    uint16_t nc_2p5;
+    uint16_t nc_10p0;
+    uint16_t typ_siz;
 };
-
 uint8_t data[16];
 
 /** Checksum calculation */
@@ -47,7 +45,7 @@ uint8_t data[16];
 // }
 
 // -- i2c write function -- //
-static int sps30_i2c_write(const struct device *i2c_dev, uint16_t addr, uint8_t *data, uint32_t num_bytes){
+static int sps30_i2c_write(const struct device *pms_dev, uint16_t addr, uint8_t *data, uint32_t num_bytes){
 
 uint8_t wr_addr[2]; // address reg 2 x 8 bits
 struct i2c_msg msgs[2]; 
@@ -68,11 +66,11 @@ wr_addr[1] = addr & 0xFF;
 	msgs[1].len = num_bytes;
 	msgs[1].flags = I2C_MSG_WRITE | I2C_MSG_STOP;
 
-	return i2c_transfer(i2c_dev, &msgs[0], 2, SPS30_I2C_ADDRESS);
+	return i2c_transfer(pms_dev, &msgs[0], 2, SPS30_I2C_ADDRESS);
 };
 
 // -- i2c read function -- //
-static int sps30_i2c_read(const struct device *i2c_dev,uint16_t addr, uint8_t *data, uint32_t num_bytes){
+static int sps30_i2c_read(const struct device *pms_dev,uint16_t addr, uint8_t *data, uint32_t num_bytes){
 
 	// address pointer
     uint8_t wr_addr[2];
@@ -95,52 +93,58 @@ static int sps30_i2c_read(const struct device *i2c_dev,uint16_t addr, uint8_t *d
 	msgs[1].len = num_bytes;
 	msgs[1].flags = I2C_MSG_READ | I2C_MSG_STOP;
 
-	return i2c_transfer(i2c_dev, &msgs[0], 2, SPS30_I2C_ADDRESS);
+	return i2c_transfer(pms_dev, &msgs[0], 2, SPS30_I2C_ADDRESS);
 };
 
 
 
-static int sps_sample_fetch(const struct device)	{
+static int sps_sample_fetch(const struct device *pms_dev,uint16_t addr, uint8_t *data, uint32_t num_bytes)	{
 
-struct sps30_data *drv_data = dev->data;
-int ret;
-uint8_t sps30_receive_buffer[30];
+struct pms_dev *drv_data = dev->data;
+uint8_t ret;
+uint8_t pms_receive_buffer[30];
 
-sps30_i2c_write(i2c_dev,SPS_CMD_WAKE_UP,&data[0],1)  
+// ---- set idle mode ---- //
+sps30_i2c_write(pms_dev,SPS_CMD_WAKE_UP,&data[0],0);
+sps30_i2c_write(pms_dev,SPS_CMD_WAKE_UP,&data[0],0); 
+// ------------------------ //
+
+
+sps30_i2c_write(pms_dev,SPS_CMD_START_MEASUREMENT,&data[0],1); //start measurement
 
 data[0]=0x00;
-ret=sps30_i2c_read(i2c_dev,SPS_CMD_READ_DEVICE_STATUS_REG,&data[0],1); // rdata ready flag must be looked at first
+ret=sps30_i2c_read(pms_dev,SPS_CMD_READ_DEVICE_STATUS_REG,&data[0],1); // rdata ready flag must be looked at first
+
 if(ret){
-printk("Error writing to sps");
-return;
-}else{
-sps30_i2c_write(i2c_dev,SPS_CMD_AUTOCLEAN_INTERVAL,&data[0],1); //start auto fan cleaner
-
-sps30_i2c_write(i2c_dev,SPS_CMD_START_MEASUREMENT,&data[0],1); //start measurement
-sps30_i2c_write(i2c_dev,SPS_CMD_STOP_MEASUREMENT,&data[0],1); //stop measurement
-
-sps30_i2c_read(i2c_dev,SPS_CMD_READ_MEASUREMENT,sps30_receive_buffer,30); //set data from measurement
-
-	drv_data->mc_1p0 =
-	    (sps30_receive_buffer[8] << 8) + sps30_receive_buffer[9];
-	drv_data->mc_2p5 =
-	    (sps30_receive_buffer[10] << 8) + sps30_receive_buffer[11];
-	drv_data->mc_4p0 =
-	    (sps30_receive_buffer[12] << 8) + sps30_receive_buffer[13];
-	drv_data->mc_10p0 =
-	    (sps30_receive_buffer[14] << 8) + sps30_receive_buffer[15];
-
-    LOG_DBG("mc_1p0 = %d", drv_data->mc_1p0);
-	LOG_DBG("mc_2p5 = %d", drv_data->mc_2p5);
-    LOG_DBG("mc_4p0 = %d", drv_data->mc_4p0);
-	LOG_DBG("pm_10 = %d", drv_data->pm_10);
-
-
+	printk("No data to read");
+return 1;
+}	else{
+	printk("Read 0x%X from status reg",data[0]);
 }
 
+sps30_i2c_write(pms_dev,SPS_CMD_STOP_MEASUREMENT,&data[0],0); //stop measurement
 
-sps30_i2c_write(i2c_dev,SPS_CMD_RESET,&data[0],1);
+sps30_i2c_read(pms_dev,SPS_CMD_READ_MEASUREMENT,&pms_receive_buffer[0],30); //set data from measurement
 
-// SPS_CMD_RESET (Reset register)
+
+	drv_data->nc_2p5 =
+	    (pms_receive_buffer[10] << 8) + pms_receive_buffer[11];
+	drv_data->nc_10p0 =
+	    (pms_receive_buffer[14] << 8) + pms_receive_buffer[15];
+	drv_data->typ_siz =
+	    (pms_receive_buffer[12] << 8) + pms_receive_buffer[13];
+
+	LOG_DBG("nc_2p5 = %d", drv_data->nc_2p5);
+	LOG_DBG("nc_10 = %d", drv_data->nc_10p0);
+	LOG_DBG("typ_siz = %d", drv_data->typ_siz);
+
+
+sps30_i2c_write(pms_dev,SPS_CMD_SLEEP,&data[0],0); // Sleep mode
+
+
+//sps30_i2c_write(pms_dev,SPS_CMD_RESET,&data[0],1)
+
+
+// 
 
 }
