@@ -23,17 +23,18 @@ public class RESTcoms {
 
 
 	public void setTimestamp(String ep) {
-		Response response =null;
+		Response response = null;
 
 		try {
 			OkHttpClient client = new OkHttpClient();
 
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd\'T\'HH:mm:ss\'+\'HH:mm");
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd\'T\'HH:mm:ss\'Z\'")
+			                                               .withZone(ZoneOffset.ofHours(+1));
 			ZonedDateTime timestamp = ZonedDateTime.now();
 			String json = "{\"id\":13,\"value\":" + formatter.format(timestamp) + "}";
-			            /*+ "{\"id\":14,\"value\":" + "\"+01:00\"},"
-			            + "{\"id\":15,\"value\":" + "\"Central European Standard Time\"}";*/
-
+/*			            + "{\"id\":14,\"value\":" + "\"+01:00\"},"
+			            + "{\"id\":15,\"value\":" + "\"Europe/Paris\"}";
+*/
 			RequestBody body = RequestBody.create(MediaType.parse("application/json"), json);
 
 			Request request = new Request.Builder()
@@ -54,7 +55,7 @@ public class RESTcoms {
 	}
 
 
-	public String logObservation(String ep, int object, int instance, int resource) {
+	public String logObservation(String ep, int object, int instance, int resource) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		OkHttpClient res = new OkHttpClient();
@@ -65,16 +66,16 @@ public class RESTcoms {
 
 		// Decode JSON
 		//Airq.insertObservation(json);
-		try {
-			Response response = res.newCall(request).execute();
-			String json = response.body().string();
-			Observation observation = mapper.readValue(json, new TypeReference<Observation>(){});
-			readObservation(observation);
-			return observation.getValue();
-		} catch (IOException error) {
+		// try {
+		Response response = res.newCall(request).execute();
+		String json = response.body().string();
+		Observation observation = mapper.readValue(json, new TypeReference<Observation>(){});
+		readObservation(observation);
+		return observation.getValue();
+		/*} catch (IOException error) {
 			System.out.println("Error in logObservation: " + error.toString());
 			return "error";
-		}
+		}*/
 	}
 
 

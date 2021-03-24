@@ -15,10 +15,7 @@ CREATE TABLE log (
 	"ep" VARCHAR(64) NOT NULL,
 	"ip" VARCHAR(20),
 	"regid" VARCHAR(10),
-	"object" INT NOT NULL,
-	"instance" INT DEFAULT 0,
-	"resource" INT DEFAULT 0,
-	"value" DOUBLE PRECISION
+	"error" TEXT
 );
 
 SELECT create_hypertable('observation', 'time');
