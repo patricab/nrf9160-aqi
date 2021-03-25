@@ -31,14 +31,14 @@ public class RESTcoms {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd\'T\'HH:mm:ss\'Z\'")
 			                                               .withZone(ZoneOffset.ofHours(+1));
 			ZonedDateTime timestamp = ZonedDateTime.now();
-			String json = "{\"id\":13,\"value\":" + formatter.format(timestamp) + "}";
-/*			            + "{\"id\":14,\"value\":" + "\"+01:00\"},"
+			String json = "{\"id\":13,\"value\":" + formatter.format(timestamp) + "},"
+			            + "{\"id\":14,\"value\":" + "\"+01:00\"},"
 			            + "{\"id\":15,\"value\":" + "\"Europe/Paris\"}";
-*/
+
 			RequestBody body = RequestBody.create(MediaType.parse("application/json"), json);
 
 			Request request = new Request.Builder()
-				.url(url + "/api/clients/" + ep + "/3/0/13")
+				.url(url + "/api/clients/" + ep + "/3/0")
 				.post(body)
 				.build();
 

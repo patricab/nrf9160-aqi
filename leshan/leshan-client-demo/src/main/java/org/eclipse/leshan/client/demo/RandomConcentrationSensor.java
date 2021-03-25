@@ -20,11 +20,11 @@ import org.eclipse.leshan.core.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RandomTemperatureSensor extends BaseInstanceEnabler implements Destroyable {
+public class RandomConcentrationSensor extends BaseInstanceEnabler implements Destroyable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RandomTemperatureSensor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RandomConcentrationSensor.class);
 
-    private static final String UNIT_CELSIUS = "cel";
+    private static final String UNIT_MICROGRAM_PER_CUBIC_METER = "ug/m3";
     private static final int SENSOR_VALUE = 5700;
     private static final int UNITS = 5701;
     private static final int MAX_MEASURED_VALUE = 5602;
@@ -36,33 +36,33 @@ public class RandomTemperatureSensor extends BaseInstanceEnabler implements Dest
     private final ScheduledExecutorService scheduler;
     private final Random rng = new Random();
     private Date timestamp;
-    private double currentTemp = 20d;
-    private double minMeasuredValue = currentTemp;
-    private double maxMeasuredValue = currentTemp;
+    private double currentConcentration = 100d;
+    private double minMeasuredValue = currentConcentration;
+    private double maxMeasuredValue = currentConcentration;
 
-    public RandomTemperatureSensor() {
-        this.scheduler = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Temperature Sensor"));
+    public RandomConcentrationSensor() {
+        this.scheduler = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Concentration Sensor"));
         scheduler.scheduleAtFixedRate(new Runnable() {
 
             @Override
             public void run() {
-                adjustTemperature();
+                adjustConcentration();
             }
         }, 2, 2, TimeUnit.SECONDS);
     }
 
     @Override
     public synchronized ReadResponse read(ServerIdentity identity, int resourceId) {
-        LOG.info("Read on Temperature resource /{}/{}/{}", getModel().id, getId(), resourceId);
+        LOG.info("Read on Concentration resource /{}/{}/{}", getModel().id, getId(), resourceId);
         switch (resourceId) {
         case MIN_MEASURED_VALUE:
             return ReadResponse.success(resourceId, getTwoDigitValue(minMeasuredValue));
         case MAX_MEASURED_VALUE:
             return ReadResponse.success(resourceId, getTwoDigitValue(maxMeasuredValue));
         case SENSOR_VALUE:
-            return ReadResponse.success(resourceId, getTwoDigitValue(currentTemp));
+            return ReadResponse.success(resourceId, getTwoDigitValue(currentConcentration));
         case UNITS:
-            return ReadResponse.success(resourceId, UNIT_CELSIUS);
+            return ReadResponse.success(resourceId, UNIT_MICROGRAM_PER_CUBIC_METER);
         case TIMESTAMP:
             return ReadResponse.success(resourceId, getTimestamp());
         default:
@@ -72,7 +72,7 @@ public class RandomTemperatureSensor extends BaseInstanceEnabler implements Dest
 
     @Override
     public synchronized ExecuteResponse execute(ServerIdentity identity, int resourceId, String params) {
-        LOG.info("Execute on Temperature resource /{}/{}/{}", getModel().id, getId(), resourceId);
+        LOG.info("Execute on Concentration resource /{}/{}/{}", getModel().id, getId(), resourceId);
         switch (resourceId) {
         case RESET_MIN_MAX_MEASURED_VALUES:
             resetMinMaxMeasuredValues();
@@ -87,10 +87,10 @@ public class RandomTemperatureSensor extends BaseInstanceEnabler implements Dest
         return toBeTruncated.setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 
-    private void adjustTemperature() {
-        float delta = (rng.nextInt(20) - 10) / 10f;
-        currentTemp += delta;
-        Integer changedResource = adjustMinMaxMeasuredValue(currentTemp);
+    private void adjustConcentration() {
+        float delta = (rng.nextInt(50) - 1) / 10f;
+        currentConcentration += delta;
+        Integer changedResource = adjustMinMaxMeasuredValue(currentConcentration);
         timestamp = new Date();
         if (changedResource != null) {
             fireResourcesChange(SENSOR_VALUE, changedResource);
@@ -99,12 +99,12 @@ public class RandomTemperatureSensor extends BaseInstanceEnabler implements Dest
         }
     }
 
-    private synchronized Integer adjustMinMaxMeasuredValue(double newTemperature) {
-        if (newTemperature > maxMeasuredValue) {
-            maxMeasuredValue = newTemperature;
+    private synchronized Integer adjustMinMaxMeasuredValue(double newConcentration) {
+        if (newConcentration > maxMeasuredValue) {
+            maxMeasuredValue = newConcentration;
             return MAX_MEASURED_VALUE;
-        } else if (newTemperature < minMeasuredValue) {
-            minMeasuredValue = newTemperature;
+        } else if (newConcentration < minMeasuredValue) {
+            minMeasuredValue = newConcentration;
             return MIN_MEASURED_VALUE;
         } else {
             return null;
@@ -112,8 +112,8 @@ public class RandomTemperatureSensor extends BaseInstanceEnabler implements Dest
     }
 
     private void resetMinMaxMeasuredValues() {
-        minMeasuredValue = currentTemp;
-        maxMeasuredValue = currentTemp;
+        minMeasuredValue = currentConcentration;
+        maxMeasuredValue = currentConcentration;
     }
 
     private Date getTimestamp() {

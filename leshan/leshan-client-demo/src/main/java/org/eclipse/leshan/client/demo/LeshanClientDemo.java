@@ -122,8 +122,14 @@ public class LeshanClientDemo {
                             "10365.xml", "10366.xml", "10368.xml", "10369.xml", "10371.xml", "18830.xml",
                             "18831.xml", };
 
-    private static final int OBJECT_ID_TEMPERATURE_SENSOR = 3303;
-    private final static String DEFAULT_ENDPOINT = "LeshanClientDemo";
+    private static final int OBJECT_ID_GENERIC_SENSOR       =  3300;
+    private static final int OBJECT_ID_TEMPERATURE_SENSOR   =  3303;
+    private static final int OBJECT_ID_HUMIDITY_SENSOR      =  3304;
+    private static final int OBJECT_ID_PRESSURE_SENSOR      =  3323;
+    private static final int OBJECT_ID_CONCENTRATION_SENSOR =  3325;
+    private static final int OBJECT_ID_COLOUR_SENSOR        =  3335;
+    private static final int OBJECT_ID_PARTICULATE_SENSOR   = 10314;
+    private final static String DEFAULT_ENDPOINT = "Thingy91Demo";
     private final static int DEFAULT_LIFETIME = 5 * 60; // 5min in seconds
     private final static String USAGE = "java -jar leshan-client-demo.jar [OPTION]\n\n";
 
@@ -615,9 +621,15 @@ public class LeshanClientDemo {
                 initializer.setInstancesForObject(SERVER, new Server(123, lifetime));
             }
         }
-        initializer.setInstancesForObject(DEVICE, new MyDevice());
+        initializer.setInstancesForObject(DEVICE, new Thingy91());
         initializer.setInstancesForObject(LOCATION, locationInstance);
-        initializer.setInstancesForObject(OBJECT_ID_TEMPERATURE_SENSOR, new RandomTemperatureSensor());
+        //initializer.setInstancesForObject(OBJECT_ID_GENERIC_SENSOR      , new RandomGenericSensor());
+        initializer.setInstancesForObject(OBJECT_ID_TEMPERATURE_SENSOR  , new RandomTemperatureSensor());
+        initializer.setInstancesForObject(OBJECT_ID_HUMIDITY_SENSOR     , new RandomHumiditySensor());
+        initializer.setInstancesForObject(OBJECT_ID_PRESSURE_SENSOR     , new RandomPressureSensor());
+        initializer.setInstancesForObject(OBJECT_ID_CONCENTRATION_SENSOR, new RandomConcentrationSensor());
+        //initializer.setInstancesForObject(OBJECT_ID_COLOUR_SENSOR       , new RandomColourSensor());
+        initializer.setInstancesForObject(OBJECT_ID_PARTICULATE_SENSOR  , new RandomParticulateSensor());
         List<LwM2mObjectEnabler> enablers = initializer.createAll();
 
         // Create CoAP Config
