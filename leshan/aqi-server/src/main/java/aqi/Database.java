@@ -8,7 +8,9 @@ import org.eclipse.leshan.core.observation.*;
 import org.eclipse.leshan.core.node.*;
 import org.eclipse.leshan.core.response.*;
 import org.eclipse.leshan.core.request.*;
+import org.eclipse.leshan.server.registration.*;
 import org.eclipse.leshan.core.model.ResourceModel.Type;
+import org.eclipse.leshan.server.californium.LeshanServer;
 
 
 public class Database {
@@ -44,7 +46,19 @@ public class Database {
 		return value;
 	}
 
-	public static void observation(ObserveResponse response, String ep)
+	private static String getTimestamp(ReadResponse response) {
+		//Type type = ((LwM2mSingleResource)response.getContent()).getType();
+		//Object value = ((LwM2mSingleResource)response.getContent()).getValue();
+
+		//java.util.Date timestamp = (java.util.Date) value;
+
+		System.out.println("getTimestamp() " + response.getContent().toString());
+
+		return (String) (((LwM2mSingleResource)response.getContent()).getValue());
+	}
+
+	public static void observation(ObserveResponse response, String ep, 
+		LeshanServer server, Registration registration)
 	{
 		Observation observation = response.getObservation();
 		List<TimestampedLwM2mNode> timestampedNodes = response.getTimestampedLwM2mNode();
@@ -58,14 +72,20 @@ public class Database {
 		ContentFormat contentFormat = observation.getContentFormat();
 		Map<String, String> context = observation.getContext();
 
-		int obj = path.getObjectId().intValue();
-		int inst = path.getResourceId().intValue();
-		int res = path.getObjectInstanceId().intValue();
+		int obj  = path.getObjectId().intValue();
+		int inst = path.getObjectInstanceId().intValue();
+		int res  = path.getResourceId().intValue();
 
-		if (res == 5518) {
-			java.util.Date date = (java.util.Date) getValue(response);
-			System.out.println("Timestamp: " + date);
+		String timestamp = "0";
+
+		try {
+			ReadResponse timeresponse = server.send(registration, new ReadRequest(ContentFormat.TEXT, obj,inst,5518));
+			timestamp = getTimestamp(timeresponse);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Error read timestamp" + obj + inst);
 		}
+
 
 		double val = (double) getValue(response);
 
@@ -73,17 +93,18 @@ public class Database {
 		Statement stmt = null;
 		Connection conn = null;
 		System.out.println("Connecting to database...");
+			String sql = "INSERT INTO observation(timestamp, ep, object, instance, resource, value) " + 
+			             "VALUES(" + timestamp + ", '" + ep + "', " + obj + ", " + inst + ", " + res + ", " + val + ");";
+			System.out.println(sql);
 		try
 		{
 			Class.forName("org.postgresql.Driver");
 			conn = DriverManager.getConnection(DB_URL, user, pass);
 			System.out.println("INSERT data...");
 			stmt = conn.createStatement();
-			String sql = "INSERT INTO observation(ep, object, instance, resource, value) " + 
-			             "VALUES('" + ep + "', " + obj + ", " + inst + ", " + res + ", " + val + ");";
+			
 			stmt.executeUpdate(sql);
-			System.out.println(sql);
-			System.out.println("INSERT data successfully!");
+			System.out.println("INSERT data successfully! " + timestamp);
 			stmt.close();//finally block used to close resources
 		
 		}

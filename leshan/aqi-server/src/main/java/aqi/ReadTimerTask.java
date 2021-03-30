@@ -64,10 +64,10 @@ public class ReadTimerTask extends TimerTask {
 	public void run() {
 		//sendReq(3,0,13);
 		sendReq(3303, 0, 5700);
-		sendReq(3303, 0, 5518);
+		//sendReq(3303, 0, 5518);
 
 		sendReq(3304, 0, 5700);
-		sendReq(3304, 0, 5518);
+		//sendReq(3304, 0, 5518);
 
 		System.out.println("Run done");
 	}

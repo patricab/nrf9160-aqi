@@ -2,9 +2,10 @@
 DROP TABLE IF EXISTS observation CASCADE;
 CREATE TABLE observation (
 	"time" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	"timestamp" BIGINT,
 	"ep" VARCHAR(64) NOT NULL,
 	"object" INT NOT NULL,
-	"instance" INT DEFAULT 0,
+	"instance" INT,
 	"resource" INT DEFAULT 0,
 	"value" DOUBLE PRECISION
 );

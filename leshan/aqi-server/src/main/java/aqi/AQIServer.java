@@ -78,15 +78,8 @@ public class AQIServer
 				System.out.println("Receive notification from " + observation.getPath() 
 					              + " value " + response.getContent().toString());
 		
-				try {
-					ReadResponse rresponse = server.send(registration, new ReadRequest(3303,0,5518));
-					Object value = ((LwM2mSingleResource)rresponse.getContent()).getValue();
-					//java.util.Date date = (java.util.Date) value;
-					System.out.println("date: " + value);
-				} catch (Exception e) {}
-
 				//airqdb.observation(rresponse, registration.getEndpoint());
-				airqdb.observation(response, registration.getEndpoint());
+				airqdb.observation(response, registration.getEndpoint(), server, registration);
 			}
 
 			public void cancelled(Observation observation) {

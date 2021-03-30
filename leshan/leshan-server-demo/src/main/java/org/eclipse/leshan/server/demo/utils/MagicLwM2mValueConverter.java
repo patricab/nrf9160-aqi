@@ -43,6 +43,8 @@ public class MagicLwM2mValueConverter implements LwM2mValueConverter {
     @Override
     public Object convertValue(Object value, Type currentType, Type expectedType, LwM2mPath resourcePath)
             throws CodecException {
+
+        System.out.println("cobvert " + currentType + " " + expectedType);
         if (expectedType == null) {
             // unknown resource, trusted value
             return value;

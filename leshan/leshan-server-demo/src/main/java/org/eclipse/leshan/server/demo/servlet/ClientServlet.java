@@ -428,6 +428,8 @@ public class ClientServlet extends HttpServlet {
             resp.getWriter().append("Request timeout").flush();
         } else {
             String response = this.gson.toJson(cResponse);
+
+            System.out.println("processDeviceResponse " + cResponse);
             resp.setContentType("application/json");
             resp.getOutputStream().write(response.getBytes());
             resp.setStatus(HttpServletResponse.SC_OK);
