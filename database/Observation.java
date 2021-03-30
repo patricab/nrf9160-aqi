@@ -16,7 +16,7 @@ public class Observation { //static
 
 	public Content getContent() {
 		return content;
-	} 
+	}
 	
 	public boolean getFailure() {
 		return failure;

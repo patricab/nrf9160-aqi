@@ -27,25 +27,24 @@ public class RESTcoms {
 
 		try {
 			OkHttpClient client = new OkHttpClient();
-
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd\'T\'HH:mm:ss\'Z\'")
-			                                               .withZone(ZoneOffset.ofHours(+1));
+			                                               .withZone(ZoneOffset.ofHours(0));
 			ZonedDateTime timestamp = ZonedDateTime.now();
-			String json = "{\"id\":13,\"value\":" + formatter.format(timestamp) + "},"
-			            + "{\"id\":14,\"value\":" + "\"+01:00\"},"
-			            + "{\"id\":15,\"value\":" + "\"Europe/Paris\"}";
+			String json = "{\"id\":0, \"resources\":["
+			            + "{\"id\":13,\"value\":" + formatter.format(timestamp) + "},"
+			            + "{\"id\":14,\"value\":\"+01:00\"},"
+			            + "{\"id\":15,\"value\":\"Europe/Paris\"}]}";
 
 			RequestBody body = RequestBody.create(MediaType.parse("application/json"), json);
-
 			Request request = new Request.Builder()
 				.url(url + "/api/clients/" + ep + "/3/0")
-				.post(body)
+				.put(body)
 				.build();
 
 			Call call = client.newCall(request);
 			response = call.execute();
 
-			assertThat(response.code(), equalTo(200));
+			//assertThat(response.code(), equalTo(200));
 
 		} catch (IOException e) {
 			System.out.println("Error in setTimestamp: "+ e.toString());
@@ -53,6 +52,7 @@ public class RESTcoms {
 			response.body().close();
 		}
 	}
+
 
 
 	public String logObservation(String ep, int object, int instance, int resource) throws IOException {
@@ -71,6 +71,7 @@ public class RESTcoms {
 		String json = response.body().string();
 		Observation observation = mapper.readValue(json, new TypeReference<Observation>(){});
 		readObservation(observation);
+
 		return observation.getValue();
 		/*} catch (IOException error) {
 			System.out.println("Error in logObservation: " + error.toString());
@@ -117,8 +118,37 @@ public class RESTcoms {
 	private void readObservation(Observation observation) {
 		System.out.println("ID: " + observation.getId() + " Value: " + observation.getValue());
 	}
-}
 
-/*if id = 5700 {
-	"Sensor value"
-}*/
+
+	public void observeResourceStart(String ep, int object, int instance, int resource) throws IOException
+	{
+		OkHttpClient client = new OkHttpClient();
+		RequestBody body = RequestBody.create(null, new byte[]{});
+		Request request = new Request.Builder()
+			.url(url + "/api/clients/" + ep + "/" + object + "/" + instance + "/" + resource + "/observe")
+			.method("POST", body)
+			.header("Content-Length", "0")
+			.build();
+		
+		Call call = client.newCall(request);
+		Response response = call.execute();
+
+		assertThat(response.code(), equalTo(200));
+	}
+
+
+	public void observeResourceStop(String ep, int object, int instance, int resource) throws IOException
+	{
+		OkHttpClient client = new OkHttpClient();
+
+		Request request = new Request.Builder()
+			.url(url + "/api/clients/" + ep + "/" + object + "/" + instance + "/" + resource + "/observe")
+			.delete()
+			.build();
+
+		Call call = client.newCall(request);
+		Response response = call.execute();
+
+		assertThat(response.code(), equalTo(200));
+	}
+}

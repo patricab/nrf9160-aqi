@@ -48,7 +48,7 @@ public class RandomTemperatureSensor extends BaseInstanceEnabler implements Dest
             public void run() {
                 adjustTemperature();
             }
-        }, 2, 2, TimeUnit.SECONDS);
+        }, 2, 30, TimeUnit.SECONDS);
     }
 
     @Override

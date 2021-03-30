@@ -141,5 +141,39 @@ public class JavaDBCom {
 			e.printStackTrace();
 		}
 	}
+
+	public static void observation(Observation observation)
+	{
+		
+
+
+		Statement stmt = null;
+		Connection conn = null;
+		try
+		{
+			Class.forName("org.postgresql.Driver");
+			System.out.println("Connecting to database...");
+			conn = DriverManager.getConnection(DB_URL, user, pass);
+			System.out.println("INSERT data...");
+			stmt = conn.createStatement();
+			
+			String sql = "INSERT INTO observation(time, ep, object, instance, resource, value) " + 
+			             "VALUES('" + time + "', '" + ep + "', " + obj + ", " + inst + ", " + res + ", " + val + ");";
+			stmt.executeUpdate(sql);
+			System.out.println("INSERT data successfully!");
+			stmt.close();//finally block used to close resources
+		
+		}
+		catch(SQLException se)
+		{
+			//Handle errors for JDBC
+			se.printStackTrace();
+		}
+		catch(Exception e)
+		{
+			//Handle errors for Class.forName
+			e.printStackTrace();
+		}
+	}
 }
  
