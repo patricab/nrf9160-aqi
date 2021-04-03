@@ -43,6 +43,16 @@ static void uart_cb(const struct device *dev) {
 		rx_buf[data_length] = 0;
 		data_length = uart_fifo_read(dev, rx_buf, sizeof(rx_buf));
 	}
+
+   /* Clear remaining buffer at EOT (newline) */
+   for (int i = 0; i < sizeof(rx_buf); i++) {
+      if (rx_buf[i] == '\n') {
+         for (int k = i+1; k < sizeof(rx_buf); k++) {
+            rx_buf[k] = 0;
+         }
+         break;
+      }
+   }
 }
 
 /* Delay function */
