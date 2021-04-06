@@ -9,6 +9,7 @@
 #include <zephyr/types.h>
 #include <drivers/sensor.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <logging/log.h>
 
@@ -16,8 +17,6 @@
 #define STACKSIZE 1024
 #define BUFF_SIZE 1024
 
-/* Function declarations */
-static void uart_rx(struct k_timer *delay_timer);
 
 /**
    @brief Read sensor gas measurement (single measurement)

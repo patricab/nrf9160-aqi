@@ -25,12 +25,6 @@ int lwm2m_init_device(char *serial_num);
 /* Location */
 int lwm2m_init_location(void);
 
-/* Gas (Resistance) */
-int lwm2m_init_gas_res(void);
-
-/* Gas */
-int lwm2m_init_gas(void);
-
 #if defined(CONFIG_LWM2M_FIRMWARE_UPDATE_OBJ_SUPPORT)
 void *firmware_read_cb(uint16_t obj_inst_id, size_t *data_len);
 int lwm2m_init_firmware(void);
@@ -56,7 +50,8 @@ int lwm2m_init_hum(void);
 #endif
 
 #if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
-int lwm2m_init_conc(void);
+/* Gas */
+int lwm2m_init_gas(void);
 #endif
 
 #if defined(CONFIG_LWM2M_IPSO_COLOUR_SENSOR)
@@ -81,6 +76,11 @@ int lwm2m_init_button(void);
 int handle_accel_events(struct ui_evt *evt);
 #endif
 int lwm2m_init_accel(void);
+#endif
+
+#if defined(CONFIG_LWM2M_GAS_RES)
+/* Gas (Resistance) */
+int lwm2m_init_gas_res(void);
 #endif
 
 #ifdef __cplusplus

@@ -149,9 +149,6 @@ static int lwm2m_setup(void)
 #if defined(CONFIG_LWM2M_IPSO_HUMIDITY_SENSOR)
 	lwm2m_init_hum();
 #endif
-#if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
-	lwm2m_init_conc();
-#endif
 #if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
 	lwm2m_init_prtcl();
 #endif
@@ -164,8 +161,12 @@ static int lwm2m_setup(void)
 #if defined(CONFIG_LWM2M_IPSO_ACCELEROMETER)
 	lwm2m_init_accel();
 #endif
-lwm2m_init_gas_res();
-lwm2m_init_gas();
+#if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
+	lwm2m_init_gas();
+#endif
+#if defined(CONFIG_LWM2M_GAS_RES)
+	lwm2m_init_gas_res();
+#endif
 	return 0;
 }
 

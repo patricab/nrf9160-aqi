@@ -8,6 +8,12 @@ menu "Application sample"
 rsource "src/ui/Kconfig"
 rsource "src/lwm2m/Kconfig.ipso"
 
+config LWM2M_GAS_RES
+	bool "Gas resistance from BME680"
+	default n
+	help
+	  Use gas sensor
+
 config APP_LWM2M_SERVER
 	string "LwM2M server name or IP address"
 	help
