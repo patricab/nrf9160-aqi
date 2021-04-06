@@ -24,15 +24,8 @@ static int32_t timestamp;
 static int read_val(const struct device *die_dev,
 					int16_t *sens_val)
 {
-	int err = init_uart(die_dev);
-	if (err != 0)
-	{
-		LOG_ERR("I/O error");
-		return 1;
-	}
 
-	err = read_gas(sens_val);
-	/* ret = sensor_channel_get(temp_dev, SENSOR_CHAN_AMBIENT_TEMP, &temp); */
+	int err = read_gas(sens_val);
 	if (err != 0)
 	{
 		LOG_ERR("Error: can't get data");
@@ -55,8 +48,8 @@ static void *gas_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_ins
 		return NULL;
 	}
 
-	read_val(die_dev, &val);
-	lwm2m_engine_set_s16("3325/0/5529", &val);
+	read_val(die_dev, val);
+	lwm2m_engine_set_s16("3325/0/5529", *val);
 	*data_len = sizeof(val);
 	/* get current time from device */
 	lwm2m_engine_get_s32("3/0/13", &ts);
@@ -72,6 +65,13 @@ int lwm2m_init_gas(void)
 	if (!die_dev)
 	{
 		LOG_ERR("No device found.");
+	}
+
+	int err = init_uart(die_dev);
+	if (err != 0)
+	{
+		LOG_ERR("I/O error");
+		return 1;
 	}
 
 	lwm2m_engine_create_obj_inst("3325/0");

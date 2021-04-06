@@ -6,6 +6,9 @@ static uint8_t *rx_buf = {NULL};
 static const struct device *dev;
 struct k_thread uart_data;
 
+/* Function declarations */
+static void uart_rx(struct k_timer *delay_timer);
+
 /* Inital configuration */
 K_THREAD_STACK_DEFINE(uart_stack, STACKSIZE);
 K_TIMER_DEFINE(delay_timer, uart_rx, NULL);
@@ -35,7 +38,7 @@ static void tx_uart(const uint8_t *buf) {
 }
 
 /* UART recieve (RX) callback */
-static void uart_cb(const struct device *dev) {
+static void uart_cb(const struct device *dev, void *data) {
    int data_length = 0;
 	uart_irq_update(dev);
 
@@ -53,6 +56,8 @@ static void uart_cb(const struct device *dev) {
          break;
       }
    }
+   // Avoid warning about void * type for uart_irq
+   data = rx_buf;
 }
 
 /* Delay function */
@@ -89,8 +94,7 @@ int read_gas(int16_t *rx_val) {
    }
 
    // Output rx buffer
-   sscanf(&rx_buf, "%d", &rx_val);
-   /* rx_val = rx_buf; */
+   sscanf(rx_buf, "%d", (int *)&rx_val);
    return 0;
 }
 
@@ -162,11 +166,11 @@ int init_uart(const struct device *die_dev) {
    enum uart_config_stop_bits stop = UART_CFG_STOP_BITS_1;
    enum uart_config_data_bits data = UART_CFG_DATA_BITS_8;
    enum uart_config_flow_control flow = UART_CFG_FLOW_CTRL_NONE;
-   const struct uart_config *conf = {baud, parity, stop, data, flow};
+   const struct uart_config conf = {baud, parity, stop, data, flow};
    dev = die_dev;
 
    /* Config function calls */
-   int err = uart_configure(dev, conf);
+   int err = uart_configure(dev, &conf);
    if (err != 0) {
       LOG_ERR("Error: could not configure UART device");
       return 1;
