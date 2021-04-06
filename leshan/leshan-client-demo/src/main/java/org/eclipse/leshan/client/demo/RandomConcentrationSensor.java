@@ -48,7 +48,7 @@ public class RandomConcentrationSensor extends BaseInstanceEnabler implements De
             public void run() {
                 adjustConcentration();
             }
-        }, 2, 2, TimeUnit.SECONDS);
+        }, 2, 30, TimeUnit.SECONDS);
     }
 
     @Override

@@ -52,7 +52,7 @@ public class RandomPressureSensor extends BaseInstanceEnabler implements Destroy
             public void run() {
                 adjustPressure();
             }
-        }, 2, 2, TimeUnit.SECONDS);
+        }, 2, 30, TimeUnit.SECONDS);
     }
 
     @Override

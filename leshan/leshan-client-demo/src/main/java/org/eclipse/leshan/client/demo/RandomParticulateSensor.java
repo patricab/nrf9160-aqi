@@ -25,6 +25,7 @@ public class RandomParticulateSensor extends BaseInstanceEnabler implements Dest
     private static final Logger LOG = LoggerFactory.getLogger(RandomParticulateSensor.class);
 
     private static final String UNIT_MICROGRAM_PER_CUBIC_METER = "ug/m3";
+    private static final float PARTICLE_SIZE_VALUE = 2.5f;
     private static final float MAX_RANGE_VALUE = 1000;
     private static final int SENSOR_VALUE = 5700;
     private static final int UNITS = 5701;
@@ -33,11 +34,14 @@ public class RandomParticulateSensor extends BaseInstanceEnabler implements Dest
     private static final int MAX_RANGE_VALUE_ID = 5604;
     private static final int RESET_MIN_MAX_MEASURED_VALUES = 5605;
     private static final int TIMESTAMP = 5518;
+    private static final int APPLICATION_TYPE = 5750;
+    private static final int PARTICLE_SIZE = 6043;
     private static final List<Integer> supportedResources = Arrays.asList(SENSOR_VALUE, UNITS, MAX_MEASURED_VALUE,
-            MIN_MEASURED_VALUE, MAX_RANGE_VALUE_ID, RESET_MIN_MAX_MEASURED_VALUES, TIMESTAMP);
+            MIN_MEASURED_VALUE, MAX_RANGE_VALUE_ID, RESET_MIN_MAX_MEASURED_VALUES, TIMESTAMP, APPLICATION_TYPE, PARTICLE_SIZE);
     private final ScheduledExecutorService scheduler;
     private final Random rng = new Random();
     private Date timestamp;
+    private String application_type;
     private double currentParticulate = 100d;
     private double minMeasuredValue = currentParticulate;
     private double maxMeasuredValue = currentParticulate;
@@ -50,7 +54,7 @@ public class RandomParticulateSensor extends BaseInstanceEnabler implements Dest
             public void run() {
                 adjustParticulate();
             }
-        }, 2, 2, TimeUnit.SECONDS);
+        }, 2, 30, TimeUnit.SECONDS);
     }
 
     @Override
@@ -61,14 +65,18 @@ public class RandomParticulateSensor extends BaseInstanceEnabler implements Dest
             return ReadResponse.success(resourceId, getTwoDigitValue(minMeasuredValue));
         case MAX_MEASURED_VALUE:
             return ReadResponse.success(resourceId, getTwoDigitValue(maxMeasuredValue));
+        case MAX_RANGE_VALUE_ID:
+            return ReadResponse.success(resourceId, MAX_RANGE_VALUE);
         case SENSOR_VALUE:
             return ReadResponse.success(resourceId, getTwoDigitValue(currentParticulate));
         case UNITS:
             return ReadResponse.success(resourceId, UNIT_MICROGRAM_PER_CUBIC_METER);
         case TIMESTAMP:
             return ReadResponse.success(resourceId, getTimestamp());
-        case MAX_RANGE_VALUE_ID:
-            return ReadResponse.success(resourceId, MAX_RANGE_VALUE);
+        case APPLICATION_TYPE:
+            return ReadResponse.success(resourceId, getApplicationType());
+        case PARTICLE_SIZE:
+            return ReadResponse.success(resourceId, PARTICLE_SIZE_VALUE);
         default:
             return super.read(identity, resourceId);
         }
@@ -122,6 +130,10 @@ public class RandomParticulateSensor extends BaseInstanceEnabler implements Dest
 
     private Date getTimestamp() {
         return timestamp;
+    }
+
+    private String getApplicationType() {
+        return application_type;
     }
 
     @Override
