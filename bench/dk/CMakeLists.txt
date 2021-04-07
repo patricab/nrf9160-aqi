@@ -8,5 +8,9 @@ zephyr_compile_definitions(PROJECT_NAME=${PROJECT_NAME})
 target_sources(app PRIVATE dk.c)
 
 # Library files
-zephyr_library_include_directories(lib)
+zephyr_library_include_directories(
+    lib
+    ui
+)
 add_subdirectory(lib)
+add_subdirectory(ui)

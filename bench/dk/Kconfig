@@ -1,5 +1,7 @@
-
 menu "Application sample"
+
+rsource "ui/Kconfig" 
+
 module = APP
 module-dep = LOG
 module-str = Log level for sample
