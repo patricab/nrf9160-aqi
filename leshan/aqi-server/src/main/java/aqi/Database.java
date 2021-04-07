@@ -37,11 +37,12 @@ public class Database {
 					return ByteBuffer.wrap(bytes).getFloat();
 				else if (bytes.length == 8)
 					return ByteBuffer.wrap(bytes).getDouble();
+				else if (bytes.length == 2 || bytes.length == 1)
+					return ByteBuffer.wrap(bytes).getInt();
 				else
 					return null;
 			default:
 				break;
-
 		}
 		return value;
 	}

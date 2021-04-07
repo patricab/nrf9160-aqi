@@ -658,5 +658,6 @@ public class AirQualityServer {
 		lwServer.start();
 		server.start();
 		LOG.info("Web server started at {}.", server.getURI());
+		System.out.println("Web server started at " + server.getURI());
 	}
 }

@@ -109,11 +109,12 @@ public class MagicLwM2mValueConverter implements LwM2mValueConverter {
 		case TIME:
 			switch (currentType) {
 			case INTEGER:
-				LOG.debug("Trying to convert long value {} to date", value);
+				//LOG.debug("Trying to convert long value {} to date", value);
 				// let's assume we received the millisecond since 1970/1/1
-				return new Date((Long) value);
+				return value;
 			case STRING:
-				LOG.debug("Trying to convert string value {} to date", value);
+				return value;
+				/*LOG.debug("Trying to convert string value {} to date", value);
 				// let's assume we received an ISO 8601 format date
 				try {
 					DatatypeFactory datatypeFactory = DatatypeFactory.newInstance();
@@ -123,7 +124,7 @@ public class MagicLwM2mValueConverter implements LwM2mValueConverter {
 					LOG.debug("Unable to convert string to date", e);
 					throw new CodecException("Unable to convert string (%s) to date for resource %s",
 					                         value, resourcePath);
-				}
+				}*/
 			default:
 				break;
 			}

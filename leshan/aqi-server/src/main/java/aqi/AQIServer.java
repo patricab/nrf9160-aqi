@@ -69,8 +69,8 @@ public class AQIServer
 		options.addOption("slp", "coapsport", true,
 		        String.format("Set the secure local CoAP port.\nDefault: %d.", LwM2m.DEFAULT_COAP_SECURE_PORT));
 
-		options.addOption("wh", "webhost", true, "Set the HTTP address for web server.\nDefault: any local address.");
-		options.addOption("wp", "webport", true, "Set the HTTP port for web server.\nDefault: 8080.");
+		//options.addOption("wh", "webhost", true, "Set the HTTP address for web server.\nDefault: any local address.");
+		//options.addOption("wp", "webport", true, "Set the HTTP port for web server.\nDefault: 8080.");
 	/*
 		options.addOption("mdns", "publishDNSSdServices", false,
 		        "Publish leshan's services to DNS Service discovery" + RPKChapter);
@@ -176,7 +176,7 @@ public class AQIServer
 			return;
 		}
 
-		// Abort if all RPK config is not complete
+/*		// Abort if all RPK config is not complete
 		boolean rpkConfig = false;
 		if (cl.hasOption("pubk")) {
 			if (!cl.hasOption("prik")) {
@@ -256,7 +256,7 @@ public class AQIServer
 
 		ServletHolder clientServletHolder = new ServletHolder(new ClientServlet(leshanServer));
 		root.addServlet(clientServletHolder, "/api/clients/*");
-
+*/
 	/*ServletHolder securityServletHolder;
 		if (publicKey != null) {
 			securityServletHolder = new ServletHolder(new SecurityServlet(securityStore, publicKey));
@@ -266,9 +266,9 @@ public class AQIServer
 		root.addServlet(securityServletHolder, "/api/security/*");
 	*/
 
-		ServletHolder objectSpecServletHolder = new ServletHolder(
+		/*ServletHolder objectSpecServletHolder = new ServletHolder(
 		new ObjectSpecServlet(leshanServer.getModelProvider(), leshanServer.getRegistrationService()));
-		root.addServlet(objectSpecServletHolder, "/api/objectspecs/*");
+		root.addServlet(objectSpecServletHolder, "/api/objectspecs/*");*/
 
 		/*// Register a service to DNS-SD
 		if (publishDNSSdServices) {
@@ -292,8 +292,8 @@ public class AQIServer
 		// Start Jetty & Leshan
 		try {
 			leshanServer.start();
-			webServer.start();
-			System.out.println("Web server started at: " + webServer.getURI());
+			//webServer.start();
+			//System.out.println("Web server started at: " + webServer.getURI());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

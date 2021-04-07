@@ -63,15 +63,15 @@ public class ReadTimerTask extends TimerTask {
 	@Override
 	public void run() {
 		//sendReq(3,0,13);
+		sendReq(3300, 0, 5700); // Gas sensor
 		sendReq(3303, 0, 5700); // Temperature sensor
-		//sendReq(3303, 0, 5518);
-
 		sendReq(3304, 0, 5700); // Humidity sensor
+		sendReq(3325, 0, 5700); // Concentration sensor
+		sendReq(10314, 0, 5700); // Particulate sensor
+
 		//sendReq(3304, 0, 5518);
 
-		sendReq(3325, 0, 5700); // Concentration sensor
-		sendReq(3335, 0, 5700); // Colour sensor
-		sendReq(10314, 0, 5700); // Particulate sensor
+		//sendReq(3335, 0, 5700); // Colour sensor
 
 		System.out.println("Run done");
 	}

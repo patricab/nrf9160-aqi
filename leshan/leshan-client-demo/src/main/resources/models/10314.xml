@@ -100,6 +100,16 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 				<Units></Units>
 				<Description>The timestamp of when the measurement was performed.</Description>
 			</Item>
+			<!--<Item ID="5529">
+				<Name>Sensor</Name>
+				<Operations>R</Operations>
+				<MultipleInstances>Single</MultipleInstances>
+				<Mandatory>Optional</Mandatory>
+				<Type>Integer</Type>
+				<RangeEnumeration></RangeEnumeration>
+				<Units></Units>
+				<Description><![CDATA[Last or Current Measured Value from the Sensor.]]></Description>
+			</Item>-->
 			<Item ID="6043">
 				<Name>Measured Particle Size</Name>
 				<Operations>R</Operations>

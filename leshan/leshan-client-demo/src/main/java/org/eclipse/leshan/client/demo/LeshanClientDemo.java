@@ -623,7 +623,7 @@ public class LeshanClientDemo {
         }
         initializer.setInstancesForObject(DEVICE, new Thingy91());
         initializer.setInstancesForObject(LOCATION, locationInstance);
-        //initializer.setInstancesForObject(OBJECT_ID_GENERIC_SENSOR      , new RandomGenericSensor());
+        initializer.setInstancesForObject(OBJECT_ID_GENERIC_SENSOR      , new RandomGenericSensor());
         initializer.setInstancesForObject(OBJECT_ID_TEMPERATURE_SENSOR  , new RandomTemperatureSensor());
         initializer.setInstancesForObject(OBJECT_ID_HUMIDITY_SENSOR     , new RandomHumiditySensor());
         initializer.setInstancesForObject(OBJECT_ID_PRESSURE_SENSOR     , new RandomPressureSensor());
