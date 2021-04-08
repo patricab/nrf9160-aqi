@@ -14,44 +14,27 @@
 #include <logging/log.h>
 #include <kernel.h>
 #include <init.h>
-#include <sps30_I2C.h>
+#include <device.h>
+
+#include "sps30_I2C.h"
 
 LOG_MODULE_REGISTER(SPS30, CONFIG_SENSOR_LOG_LEVEL);
 
-#define CFG_SPS30_SERIAL_TIMEOUT 1000
-
 struct sps30_measurement {
-	const struct device *pms_dev;
+	const struct device *dev;
     uint16_t nc_2p5;
     uint16_t nc_10p0;
     uint16_t typ_siz;
 };
-uint8_t data[16];
-
-/** Checksum calculation */
-/*
-uint8_t CalcCrc(uint8_t data[2]) {
-    uint8_t crc = 0xFF;
-    for(int i = 0; i < 2; i++) {
-        crc ^= data[i];
-        for(uint8_t bit = 8; bit > 0; --bit) {
-            if(crc & 0x80) {
-                crc = (crc << 1) ^ 0x31u;
-            } else {
-                crc = (crc << 1);
-            }
-        }
-    }
-    return crc;
-}
-*/
 
 
 // ---- i2c set pointer function ---- //
 
-static int sps30_set_pointer(const struct device *pms_dev, uint16_t addr){
+static int sps30_set_pointer(const struct device *dev, uint16_t addr)
+{
 
-uint8_t wr_addr[2]; // address reg 2 x 8 bits
+struct sps30_data *data = dev->data;
+uint8_t wr_addr[2]; = {0};
 struct i2c_msg msgs;
 
 	// address pointer 
@@ -63,12 +46,14 @@ struct i2c_msg msgs;
 	msgs.len = 2U;
 	msgs.flags = I2C_MSG_WRITE | I2C_MSG_STOP;
 
-return i2c_transfer(pms_dev,&msgs,1,SPS30_I2C_ADDRESS);
+return i2c_transfer(data->i2c, &msgs, 1, SPS30_I2C_ADDRESS);
 }
 
 // -- i2c write function -- //
-static int sps30_i2c_write(const struct device *pms_dev, uint16_t addr, uint8_t *data, uint32_t num_bytes){
+static int sps30_i2c_write(const struct device *dev, uint16_t addr, uint8_t *data, uint32_t num_bytes)
+{
 
+struct sps30_data *data = dev->data;
 uint8_t wr_addr[2]; // address reg 2 x 8 bits
 struct i2c_msg msgs[2]; 
 
@@ -88,11 +73,14 @@ struct i2c_msg msgs[2];
 	msgs[1].len = num_bytes;
 	msgs[1].flags = I2C_MSG_WRITE | I2C_MSG_STOP;
 
-	return i2c_transfer(pms_dev, &msgs[0], 2, SPS30_I2C_ADDRESS);
-};
+	return i2c_transfer(data->i2c, &msgs, 1, SPS30_I2C_ADDRESS);
+}
 
 // -- i2c read function -- //
-static int sps30_i2c_read(const struct device *pms_dev,uint16_t addr, uint8_t *data, uint32_t num_bytes){
+static int sps30_i2c_read(const struct device *dev,uint16_t addr, uint8_t *data, uint32_t num_bytes) 
+{
+
+struct sps30_data *data = dev->data;
 
 	// address pointer
     uint8_t wr_addr[2];
@@ -115,58 +103,127 @@ static int sps30_i2c_read(const struct device *pms_dev,uint16_t addr, uint8_t *d
 	msgs[1].len = num_bytes;
 	msgs[1].flags = I2C_MSG_READ | I2C_MSG_STOP;
 
-	return i2c_transfer(pms_dev, &msgs[0], 2, SPS30_I2C_ADDRESS);
+	return i2c_transfer(data->i2c, &msgs, 1, SPS30_I2C_ADDRESS);
+}
+
+
+
+int sps30_particle_read(const struct device *dev,uint16_t addr, uint8_t *data, uint32_t num_bytes)	
+{
+
+	struct sps30_data *drv_data = dev->data;
+	int ret;
+	uint8_t pms_receive_buffer[30];
+
+	// ---- Wake up sequence ---- //
+	(void)sps30_set_pointer(dev,SPS_CMD_WAKE_UP);
+	ret = sps30_set_pointer(dev,SPS_CMD_WAKE_UP); 
+	if(ret)
+		return ret;
+
+	// delay(SPS_CMD_DELAY_USEC);	
+	// ------------------------ //
+
+
+	ret = sps30_i2c_write(dev,SPS_CMD_START_MEASUREMENT,&data[0],1); //start measurement
+	
+	if (ret < 0)
+		LOG_DBG("Error starting measurement");
+		return ret;
+
+	// wait function here 1s
+
+	ret = sps30_i2c_read(dev,SPS_CMD_READ_MEASUREMENT,&pms_receive_buffer[0],30); //set data from measurement
+
+	if (ret < 0) 
+	{
+	LOG_DBG("Failed to read measurement");
+	}
+	else {
+
+		drv_data->nc_2p5 =
+			(pms_receive_buffer[20] << 8) + pms_receive_buffer[18];
+		drv_data->nc_10p0 =
+			(pms_receive_buffer[24] << 8) + pms_receive_buffer[26];
+		drv_data->typ_siz =
+			(pms_receive_buffer[27] << 8) + pms_receive_buffer[29];
+
+		LOG_DBG("nc_2p5 = %d", drv_data->nc_2p5);
+		LOG_DBG("nc_10 = %d", drv_data->nc_10p0);
+		LOG_DBG("typ_siz = %d", drv_data->typ_siz);
+	}
+
+	ret = sps30_set_pointer(dev,SPS_CMD_SLEEP); // Sleep mode
+
+	if (ret < 0) 
+	{
+		LOG_DBG("Failed to set device to sleep");
+	return ret;
+	}
+
+	//sps30_i2c_write(pms_dev,SPS_CMD_RESET,&data[0],1)
+
+
+	// 
+	return 0;
+}
+
+/*
+static struct sensor_driver_api sps30_api_funcs = {
+      .do_this = my_driver_do_this,
+      .do_that = my_driver_do_that
 };
+*/
+int sps30_init(const struct device *dev)
+{
+	struct sps30_data *drv_data = dev->data;
+	int ret;
+	uint8_t id[4];
+	uint32_t id32;
 
 
+	drv_data->i2c = device_get_binding(DT_INST_BUS_LABEL(0));
+	if (drv_data->i2c == NULL) {
+		LOG_ERR("Failed to get pointer to %s device!",
+			    DT_INST_BUS_LABEL(0));
+		return -EINVAL;
+	}
 
-int sps30_sample_fetch(const struct device *pms_dev,uint16_t addr, uint8_t *data, uint32_t num_bytes)	{
+//-- device status register --//
+ret = sps30_i2c_read(dev,SPS_CMD_READ_DEVICE_STATUS_REG,&id[0],2);
 
-struct pms_dev *drv_data = dev->data;
-uint8_t ret;
-uint8_t pms_receive_buffer[30];
+	if(ret < 0) {
+		return ret;
+	}
+	LOG_ERR("Error reading status register");
 
-// ---- set idle mode ---- //
-sps30_set_pointer(pms_dev,SPS_CMD_WAKE_UP);
-sps30_set_pointer(pms_dev,SPS_CMD_WAKE_UP); 
-// ------------------------ //
+id32 = (id[4] << 24)+ (id[3] << 16) + (id[2] << 8) + id[1];
 
 
-sps30_i2c_write(pms_dev,SPS_CMD_START_MEASUREMENT,&data[0],1); //start measurement
+// bit 21 fan speed 
+	if(id32 << SPS30_DEVICE_STATUS_FAN_ERROR_MASK) {
+		LOG_ERR("Error: Fan speed out of range");
+		return -EIO;
+	}
 
-data[0]=0x00;
-ret=sps30_i2c_read(pms_dev,SPS_CMD_READ_DEVICE_STATUS_REG,&data[0],1); // rdata ready flag must be looked at first
+// bit 5 laser failure
+	if(id32 << SPS30_DEVICE_STATUS_LASER_ERROR_MASK) {
+		LOG_ERR("Error: Laser failure");
+		return -EIO;
+	}
 
-if(ret){
-	printk("No data to read");
-return 1;
-}	else{
-	printk("Read 0x%X from status reg",data[0]);
+// bit 4 fan failure
+	if(id32 << SPS30_DEVICE_STATUS_FAN_SPEED_WARNING) {
+		LOG_ERR("Error:Fan failure, fan is mechanically blocked or broken");
+		return -EIO;
+	}
+	return 0;
 }
 
-sps30_set_pointer(pms_dev,SPS_CMD_STOP_MEASUREMENT); //stop measurement
+static struct sps30_data;
 
-sps30_i2c_read(pms_dev,SPS_CMD_READ_MEASUREMENT,&pms_receive_buffer[0],30); //set data from measurement
-
-
-	drv_data->nc_2p5 =
-	    (pms_receive_buffer[20] << 8) + pms_receive_buffer[18];
-	drv_data->nc_10p0 =
-	    (pms_receive_buffer[24] << 8) + pms_receive_buffer[26];
-	drv_data->typ_siz =
-	    (pms_receive_buffer[27] << 8) + pms_receive_buffer[29];
-
-	LOG_DBG("nc_2p5 = %d", drv_data->nc_2p5);
-	LOG_DBG("nc_10 = %d", drv_data->nc_10p0);
-	LOG_DBG("typ_siz = %d", drv_data->typ_siz);
-
-
-sps30_set_pointer(pms_dev,SPS_CMD_SLEEP); // Sleep mode
-
-
-//sps30_i2c_write(pms_dev,SPS_CMD_RESET,&data[0],1)
-
-
-// 
-return 0;
-}
+/*
+DEVICE_DT_INST_DEFINE(0,sps30_init,
+&sps30_data,&sps30_config,POST_KERNEL,
+CONFIG_SENSOR_INIT_PRIORITY,&sps30_api_funcs);
+*/
