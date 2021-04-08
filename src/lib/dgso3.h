@@ -10,12 +10,9 @@
 #include <drivers/sensor.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/printk.h>
 
 #include <logging/log.h>
-
-/* Definitions */
-#define STACKSIZE 1024
-#define BUFF_SIZE 1024
 
 
 /**
