@@ -51,7 +51,7 @@ static void uart_rx() {
 */
 int read_gas(int16_t *rx_val) {
    /* Send command */
-   printk("\r");
+   printk("\r\n");
 
    /* Listen for data */
    // uart_rx(&delay_timer);
@@ -73,7 +73,7 @@ int read_gas(int16_t *rx_val) {
 */
 void standby_gas(void) {
    /* Send command */
-   printk("s");
+   printk("s\n");
 }
 
 /**
@@ -83,7 +83,7 @@ void standby_gas(void) {
 */
 void zero_gas(void) {
    /* Send command */
-   printk("Z");
+   printk("Z\n");
 }
 
 /**
@@ -99,7 +99,8 @@ void set_gas(uint8_t val) {
 
    /* Send value */
    // delay(K_MSEC(10));
-   printk(&val);
+   // printk(&val);
+   printk("%d", val);
 
    /* Send return character */
    // delay(K_MSEC(10));
