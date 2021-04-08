@@ -1,74 +1,44 @@
 #include "dgso3.h"
 
 /* Variables */
-static const uint8_t *tx_buf;
 static uint8_t *rx_buf = {NULL};
 static const struct device *dev;
-struct k_thread uart_data;
+static volatile bool data_received;
 
 /* Function declarations */
-static void uart_rx(struct k_timer *delay_timer);
+// static void uart_rx(struct k_timer *delay_timer);
 
 /* Inital configuration */
-K_THREAD_STACK_DEFINE(uart_stack, STACKSIZE);
-K_TIMER_DEFINE(delay_timer, uart_rx, NULL);
+// K_TIMER_DEFINE(delay_timer, uart_rx, NULL);
 LOG_MODULE_REGISTER(app_uart, CONFIG_APP_LOG_LEVEL);
 
 
-/* UART transmit (TX) callback */
-void uart_tx_cb() {
-   int err = uart_tx(dev, tx_buf, BUFF_SIZE, SYS_FOREVER_MS);
-   if (err != 0) {
-      LOG_ERR("Error: device TX timed out");
-   }
-}
-
-/* UART transmit (TX) */
-static void tx_uart(const uint8_t *buf) {
-   /* Fill TX buffer */
-   tx_buf = buf;
-
-   /* Create TX thread */
-   k_tid_t uart_tid = k_thread_create(&uart_data, uart_stack,
-                                    K_THREAD_STACK_SIZEOF(uart_stack),
-                                    uart_tx_cb,
-                                    NULL, NULL, NULL,
-                                    -1, 0, K_NO_WAIT);
-   (void)uart_tid;
-}
-
 /* UART recieve (RX) callback */
 static void uart_cb(const struct device *dev, void *data) {
-   int data_length = 0;
-	uart_irq_update(dev);
+   // Check if UART RX interrupt is ready
+ 	if (uart_irq_rx_ready(dev)) {
+      // Read from FIFO queue
+		uart_fifo_read(dev, rx_buf, sizeof(rx_buf));
 
-	if (uart_irq_rx_ready(dev)) {
-		rx_buf[data_length] = 0;
-		data_length = uart_fifo_read(dev, rx_buf, sizeof(rx_buf));
-	}
-
-   /* Clear remaining buffer at EOT (newline) */
-   for (int i = 0; i < sizeof(rx_buf); i++) {
-      if (rx_buf[i] == '\n') {
-         for (int k = i+1; k < sizeof(rx_buf); k++) {
-            rx_buf[k] = 0;
-         }
-         break;
-      }
-   }
-   // Avoid warning about void * type for uart_irq
-   data = rx_buf;
+      // End RX at at EOT (newline)
+		if (*rx_buf == '\n') {
+			data_received = true;
+		}
+  }
 }
 
 /* Delay function */
-static void delay(k_timeout_t t) {
-   k_timer_start(&delay_timer, t, K_NO_WAIT);
-}
+// static void delay(k_timeout_t t) {
+//    k_timer_start(&delay_timer, t, K_NO_WAIT);
+// }
 
 /* UART recieve (RX) */
-static void uart_rx(struct k_timer *timer) {
+// static void uart_rx(struct k_timer *timer) {
+static void uart_rx() {
    uart_irq_rx_enable(dev);
-   delay(K_SECONDS(2));
+   data_received = false;
+   while (data_received == false) {
+   }
    uart_irq_rx_disable(dev);
 }
 
@@ -80,20 +50,18 @@ static void uart_rx(struct k_timer *timer) {
    @retval 0 if successful, 1 if errors occured
 */
 int read_gas(int16_t *rx_val) {
-   unsigned char c = 0x0D; /* '\r' */
-   tx_buf = &c;
-
    /* Send command */
-   tx_uart(tx_buf);
+   printk("\r");
 
    /* Listen for data */
-   uart_rx(&delay_timer);
+   // uart_rx(&delay_timer);
+   uart_rx();
    if (!rx_buf[0]) { // Check for empty buffer
       LOG_ERR("Error: device RX timed out");
       return 1;
    }
 
-   // Output rx buffer
+   // // Output rx buffer
    sscanf(rx_buf, "%d", (int *)&rx_val);
    return 0;
 }
@@ -104,11 +72,8 @@ int read_gas(int16_t *rx_val) {
    @retval none
 */
 void standby_gas(void) {
-   char c = 's';
-   tx_buf = &c;
-
    /* Send command */
-   tx_uart(tx_buf);
+   printk("s");
 }
 
 /**
@@ -117,11 +82,8 @@ void standby_gas(void) {
    @retval none
 */
 void zero_gas(void) {
-   char c = 'Z';
-   tx_buf = &c;
-
    /* Send command */
-   tx_uart(tx_buf);
+   printk("Z");
 }
 
 /**
@@ -133,23 +95,15 @@ void zero_gas(void) {
  */
 void set_gas(uint8_t val) {
    /* Send command */
-   char c = 'S';
-   tx_buf = &c;
-
-   tx_uart(tx_buf);
+   printk("S");
 
    /* Send value */
-   tx_buf = &val;
-
-   delay(K_MSEC(10));
-   tx_uart(tx_buf);
+   // delay(K_MSEC(10));
+   printk(&val);
 
    /* Send return character */
-   unsigned char d = 0x0D; /* '\r' */
-   tx_buf = &d;
-
-   delay(K_MSEC(10));
-   tx_uart(tx_buf);
+   // delay(K_MSEC(10));
+   printk("\r");
 }
 
 /**

@@ -1,38 +1,31 @@
 #include "dgso3.h"
 
-#include "ui.h"
+#include <dk_buttons_and_leds.h>
 
 LOG_MODULE_REGISTER(dk, CONFIG_APP_LOG_LEVEL);
 
 static int16_t *rx_val;
 static const struct device *die_dev;
 
-// Button state callback
-static void btn_cb(struct ui_evt *evt) {
-    int err;
-
-    if (!evt) {
-        return;
-    }
-    // Check if/which button is active
-    if (evt->type == UI_EVT_BUTTON_ACTIVE)
-    {
-        switch (evt->button)
+static void btn_cb(uint32_t button_states, uint32_t has_changed)
+{
+    if (has_changed & button_states & DK_BTN1_MSK) {
+        int err = read_gas(rx_val);
+        if (err == 1)
         {
-            case UI_BUTTON_1:
-                err = read_gas(rx_val);
-                if (err == 1)
-                {
-                    LOG_ERR("Error: could not read measurement");
-                }
-                break;
-            case UI_BUTTON_2:
-                standby_gas();
-                break;
-            case UI_SWITCH_1:
-                zero_gas();
-                break;
+            LOG_ERR("Error: could not read measurement");
         }
+        // printk("\r");
+    }
+    else if (has_changed & button_states & DK_BTN2_MSK)
+    {
+        standby_gas();
+        // printk("s");
+    }
+    else if (has_changed & button_states & DK_BTN3_MSK)
+    {
+        zero_gas();
+        // printk("Z");
     }
 }
 
@@ -51,9 +44,8 @@ void main(void) {
 	{
 		LOG_ERR("Error: Could not initialize UART");
 	}
-
-    // Configure buttons
-    err = ui_init(btn_cb);
+    
+    err = dk_buttons_init(btn_cb);
     if (err < 0)
     {
         LOG_ERR("Error: could not initalize button 1");
