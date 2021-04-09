@@ -22,13 +22,6 @@ LOG_MODULE_REGISTER(SPS30, CONFIG_SENSOR_LOG_LEVEL);
 
 const struct device *dev;
 
-struct sps30_measurement
-{
-	uint16_t nc_2p5; // Number concentration PM2.5 [#/cm^3]
-	uint16_t nc_10p0; // Number concentration PM10 [#/cm^3]
-	uint16_t typ_size; // Typical Particle Size [nm]
-};
-
 static uint8_t check(uint8_t data[2])
 {
 	uint8_t crc = 0xFF;
@@ -56,8 +49,7 @@ static int sps30_set_pointer(const struct device *dev, uint16_t ptr)
 	// Pointer MSB + LSB
 	const uint8_t p[2] = {ptr >> 8, ptr << 8};
 
-
-	int err = i2c_write(dev, const uint8_t *buf, uint32_t num_bytes, uint16_t addr);
+	int err = i2c_write(dev, p, sizeof(), SPS30_I2C_ADDRESS);
 	if (err == -EIO)
 	{
 		LOG_ERR("Error: could not set pointer");
@@ -68,15 +60,15 @@ static int sps30_set_pointer(const struct device *dev, uint16_t ptr)
 }
 
 // -- I2C set pointer read function -- //
-static int sps30_set_pointer_read(const struct device *dev, uint16_t ptr, uint16_t addr, uint8_t *data, uint32_t num_bytes)
+static int sps30_set_pointer_read(const struct device *dev, uint16_t ptr, uint8_t *data)
 {
-	int err = sps30_set_pointer(dev, addr, ptr);
+	int err = sps30_set_pointer(dev, SPS30_I2C_ADDRESS, ptr);
 	if (err)
 	{
 		return err;
 	}
 
-	err = i2c_read(dev, data, num_bytes, addr);
+	err = i2c_read(dev, data, sizeof(data), SPS30_I2C_ADDRESS);
 	if (err == -EIO)
 	{
 		return 1;
@@ -86,7 +78,7 @@ static int sps30_set_pointer_read(const struct device *dev, uint16_t ptr, uint16
 }
 
 // -- i2c write function -- //
-static int sps30_set_pointer_write(const struct device *dev, uint16_t addr, uint8_t *wr_data, uint16_t ptr)
+static int sps30_set_pointer_write(const struct device *dev, uint16_t ptr, uint8_t *wr_data)
 {
 	const uint8_t data[5];
 
@@ -99,8 +91,7 @@ static int sps30_set_pointer_write(const struct device *dev, uint16_t addr, uint
 		data[i] = wr_data[i-2];
 	}
 
-	int err = i2c_write(dev, data, sizeof(data) , addr);
-	
+	int err = i2c_write(dev, data, sizeof(data), SPS30_I2C_ADDRESS);
 	if (err == -EIO)
 	{
 		LOG_ERR("Error: couln't write data");
@@ -109,67 +100,108 @@ static int sps30_set_pointer_write(const struct device *dev, uint16_t addr, uint
 	return 0;
 }
 
+/**
+	@brief Read particle measurment
 
-int sps30_particle_read(const struct device *dev, uint16_t addr, uint8_t *data, uint32_t num_bytes)
+	@param dev Pointer to user device
+	@param sps30_data Pointer to sensor struct
+
+	@retval 0 if successful, 1 if errors occured
+*/
+int sps30_particle_read(const struct device *dev, struct *sps30_data)
 {
-	struct sps30_data *drv_data = dev->data;
-	int ret;
+
 	uint8_t pms_receive_buffer[30];
+
 
 	// ---- Wake up sequence ---- //
 	(void)sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
-	ret = sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
+	int ret = sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
 	if (ret) {
 		return ret;
 	}
 
 
-	// delay(SPS_CMD_DELAY_USEC);
-	// ------------------------ //
+	// ---- Start measurement ---- //
+	uint8_t args_buf[2];
+	uint8_t start_buf[3];
 
-	ret = sps30_i2c_write(dev, SPS_CMD_START_MEASUREMENT, &data[0], 1); //start measurement
+	args_buf[0] = 0x03; // set arg big endian float values
+	args_buf[1] = 0x00; // dummy byte
+
+	start_buf[0] = args_buf[0]; 
+	start_buf[1] = args_buf[1]; 
+	start_buf[2] = check(args_buf); // checksum byte
+
+	ret = sps30_set_pointer_write(dev, start_buf , SPS_CMD_START_MEASUREMENT); // start measurement with arg
 
 	if (ret < 0)
-		LOG_DBG("Error starting measurement");
+	{
+		LOG_ERR("Error: Failed starting measurement");
 	return ret;
+	}
 
-	// wait function here 1s
+	// ---- read data ready flag ---- //
+	uint8_t flag_buf[3] // flag_buf[1] Data ready flag byte, 0x00: no new measurements, 0x01: new measurements to read
+
+	ret = sps30_set_pointer_read(dev, &flag_buf, SPS_CMD_START_STET_DATA_READY);
+
+	if (ret < 0)
+	{
+		LOG_ERR("Error: Failed to read data ready flag");
+	return ret;
+	}
+
+
+	//Read data flag
 
 	ret = sps30_i2c_read(dev, SPS_CMD_READ_MEASUREMENT, &pms_receive_buffer[0], 30); //set data from measurement
-
-	if (ret < 0)
-	{
-		LOG_DBG("Failed to read measurement");
+	ret = sps30_set_pointer_read(dev, SPS_CMD_READ_MEASUREMENT, rx_buf, sizeof(rx_buf)); 
+	if (ret)
+		LOG_ERR("Failed to read measurement");
+		return ret;
 	}
-	else
-	{
 
-		drv_data->nc_2p5 =
-			(pms_receive_buffer[20] << 8) + pms_receive_buffer[18];
-		drv_data->nc_10p0 =
-			(pms_receive_buffer[24] << 8) + pms_receive_buffer[26];
-		drv_data->typ_siz =
-			(pms_receive_buffer[27] << 8) + pms_receive_buffer[29];
+	sps30_data->nc_2p5 = (rx_buf[36] << 32) | (rx_buf[37] << 16) | (rx_buf[39] << 8) | rx_buf[40];
+	sps30_data->nc_10p0 = (rx_buf[48] << 32) | (rx_buf[49] << 16) | (rx_buf[51] << 8) | rx_buf[52];
+	sps30_data->typ_siz = (rx_buf[54] << 32) | (rx_buf[55] << 16) | (rx_buf[57] << 8) | rx_buf[58];
 
 		LOG_DBG("nc_2p5 = %d", drv_data->nc_2p5);
 		LOG_DBG("nc_10 = %d", drv_data->nc_10p0);
 		LOG_DBG("typ_siz = %d", drv_data->typ_siz);
 	}
 
-	ret = sps30_set_pointer(dev, SPS_CMD_SLEEP); // Sleep mode
 
+	// ---- Stop measurement ---- //
+	ret = sps30_set_pointer(dev, SPS_CMD_STOP_MEASUREMENT);
+
+	// Sleep mode
+	ret = sps30_set_pointer(dev, SPS_CMD_SLEEP); 
 	if (ret < 0)
 	{
-		LOG_DBG("Failed to set device to sleep");
+		LOG_ERR("Error: Failed to set device to sleep");
 		return ret;
 	}
 
-	//sps30_i2c_write(pms_dev,SPS_CMD_RESET,&data[0],1)
+	// ---- Sleep Device ---- //
+	ret = sps30_set_pointer(dev, SPS_CMD_SLEEP);
 
-	//
+	if (ret < 0)
+	{
+		LOG_ERR("Error: Failed to set device to sleep");
+		return ret;
+	}
+
 	return 0;
 }
 
+/**
+	@brief Initialize sps30 library
+
+	@param dev Pointer to user device
+
+	@retval 0 if successful, 1 if errors occured
+*/
 int sps30_init(const struct device *dev)
 {
 	// nRF I2C master configuration
