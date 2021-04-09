@@ -21,8 +21,6 @@
 LOG_MODULE_REGISTER(SPS30, CONFIG_SENSOR_LOG_LEVEL);
 
 const struct device *dev;
-volatile uint8_t data[2];
-volatile struct i2c_msg msgs;
 
 struct sps30_measurement
 {
@@ -52,20 +50,34 @@ static uint8_t check(uint8_t data[2])
 	return crc;
 }
 
-// ---- i2c set pointer function ---- //
-static int sps30_set_pointer(const struct device *dev, uint16_t addr)
+// ---- I2C set pointer function ---- //
+static int sps30_set_pointer(const struct device *dev, uint16_t ptr)
 {
-	data[0] = addr >> 8;
-	data[1] = addr << 8;
+	// Pointer MSB + LSB
+	const uint8_t p[2] = {ptr >> 8, ptr << 8};
 
-	msgs.buf = data;
-	msgs.len = 2;
-	msgs.flags = I2C_MSG_WRITE | I2C_MSG_STOP;
-
-	int err = i2c_write(dev, const uint8_t *buf, uint32_t num_bytes, uint16_t addr);
+	int err = i2c_write(dev, p, sizeof(), addr);
 	if (err == -EIO)
 	{
 		LOG_ERR("Error: could not set pointer");
+		return 1;
+	}
+	
+	return 0;
+}
+
+// -- I2C set pointer read function -- //
+static int sps30_set_pointer_read(const struct device *dev, uint16_t ptr, uint16_t addr, uint8_t *data, uint32_t num_bytes)
+{
+	int err = sps30_set_pointer(dev, addr, ptr);
+	if (err)
+	{
+		return err;
+	}
+
+	err = i2c_read(dev, data, num_bytes, addr);
+	if (err == -EIO)
+	{
 		return 1;
 	}
 	
@@ -98,33 +110,6 @@ static int sps30_i2c_write(const struct device *dev, uint16_t addr, uint8_t *dat
 	return i2c_transfer(data->i2c, &msgs, 1, SPS30_I2C_ADDRESS);
 }
 
-// -- i2c read function -- //
-static int sps30_i2c_read(const struct device *dev, uint16_t addr, uint8_t *data, uint32_t num_bytes)
-{
-	struct sps30_data *data = dev->data;
-
-	// address pointer
-	uint8_t wr_addr[2];
-	struct i2c_msg msgs[2];
-
-	/* sps30 pointer address */
-	wr_addr[0] = (addr >> 8) & 0xFF;
-	wr_addr[1] = addr & 0xFF;
-
-	/* Setup I2C messages */
-
-	/* Send the address to read from */
-	msgs[0].buf = wr_addr;
-	msgs[0].len = 2U;
-	msgs[0].flags = I2C_MSG_WRITE;
-
-	/* Read from device. STOP after this. */
-	msgs[1].buf = data;
-	msgs[1].len = num_bytes;
-	msgs[1].flags = I2C_MSG_READ | I2C_MSG_STOP;
-
-	return i2c_transfer(data->i2c, &msgs, 1, SPS30_I2C_ADDRESS);
-}
 
 int sps30_particle_read(const struct device *dev, uint16_t addr, uint8_t *data, uint32_t num_bytes)
 {
@@ -135,8 +120,10 @@ int sps30_particle_read(const struct device *dev, uint16_t addr, uint8_t *data, 
 	// ---- Wake up sequence ---- //
 	(void)sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
 	ret = sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
-	if (ret)
+	if (ret) {
 		return ret;
+	}
+
 
 	// delay(SPS_CMD_DELAY_USEC);
 	// ------------------------ //
