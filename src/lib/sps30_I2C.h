@@ -38,6 +38,9 @@ int sps30_i2c_write(const struct device *dev, uint16_t addr, uint8_t *data, uint
 
 int sps30_particle_read(const struct device *pms_dev,uint16_t addr, uint8_t *data, uint32_t num_bytes);
 
-struct sps30_data {
-	const struct device *i2c;
-};
+struct sps30_data
+{
+	uint32_t nc_2p5; // Number concentration PM2.5 [#/cm^3]
+	uint32_t nc_10p0; // Number concentration PM10 [#/cm^3]
+	uint32_t typ_size; // Typical Particle Size [nm]
+}sps30;
