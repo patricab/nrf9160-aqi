@@ -16,6 +16,15 @@
 
 
 /**
+   @brief Initialize UART device
+
+   @param die_dev User device
+
+   @retval 0 if successful, 1 if an error occured
+*/
+int init_uart(const struct device *die_dev);
+
+/**
    @brief Read sensor gas measurement (single measurement)
 
    @param rx_val User RX value
@@ -46,14 +55,4 @@ void zero_gas(void);
    @retval none
 */
 void set_gas(uint8_t val);
-
-/**
-   @brief Initialize UART device
-
-   @param die_dev User device
-
-   @retval 0 if successful, 1 if an error occured
-*/
-int init_uart(const struct device *die_dev);
-
 #endif

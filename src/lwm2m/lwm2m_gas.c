@@ -26,7 +26,7 @@ static int read_val(const struct device *die_dev,
 {
 
 	int err = read_gas(sens_val);
-	if (err != 0)
+	if (err)
 	{
 		LOG_ERR("Error: can't get data");
 		return 1;
@@ -68,7 +68,7 @@ int lwm2m_init_gas(void)
 	}
 
 	int err = init_uart(die_dev);
-	if (err != 0)
+	if (err)
 	{
 		LOG_ERR("I/O error");
 		return 1;

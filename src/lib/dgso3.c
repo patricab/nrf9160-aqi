@@ -99,7 +99,7 @@ void set_gas(uint8_t val) {
 
    /* Send value */
    // delay(K_MSEC(10));
-   printk(&val);
+   printk("%u", val);
 
    /* Send return character */
    // delay(K_MSEC(10));
@@ -125,7 +125,7 @@ int init_uart(const struct device *die_dev) {
 
    /* Config function calls */
    int err = uart_configure(dev, &conf);
-   if (err != 0) {
+   if (err) {
       LOG_ERR("Error: could not configure UART device");
       return 1;
    }
