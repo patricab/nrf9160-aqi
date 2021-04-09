@@ -85,29 +85,27 @@ static int sps30_set_pointer_read(const struct device *dev, uint16_t ptr, uint16
 }
 
 // -- i2c write function -- //
-static int sps30_i2c_write(const struct device *dev, uint16_t addr, uint8_t *data, uint32_t num_bytes)
+static int sps30_set_pointer_write(const struct device *dev, uint16_t addr, uint8_t *wr_data, uint16_t ptr)
 {
-	struct sps30_data *data = dev->data;
-	uint8_t wr_addr[2]; // address reg 2 x 8 bits
-	struct i2c_msg msgs[2];
+	const uint8_t data[5];
 
 	// address pointer
-	wr_addr[0] = (addr >> 8) & 0xFF;
-	wr_addr[1] = addr & 0xFF;
+	data[0] = ptr >> 8;
+	data[1] = ptr << 8;
 
-	/* Setup I2C messages */
+	for (int i = 2; i < sizeof(wr_data); i++)
+	{
+		data[i] = wr_data[i-2];
+	}
 
-	/* Send the address to write to */
-	msgs[0].buf = wr_addr;
-	msgs[0].len = 2U;
-	msgs[0].flags = I2C_MSG_WRITE;
-
-	/* Data to be written, and STOP after this. */
-	msgs[1].buf = data;
-	msgs[1].len = num_bytes;
-	msgs[1].flags = I2C_MSG_WRITE | I2C_MSG_STOP;
-
-	return i2c_transfer(data->i2c, &msgs, 1, SPS30_I2C_ADDRESS);
+	int err = i2c_write(dev, data, sizeof(data) , addr);
+	
+	if (err == -EIO)
+	{
+		LOG_ERR("Error: couln't write data");
+		return 1;
+	}
+	return 0;
 }
 
 
