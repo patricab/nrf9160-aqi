@@ -111,28 +111,49 @@ static int sps30_set_pointer_write(const struct device *dev, uint16_t addr, uint
 
 int sps30_particle_read(const struct device *dev, uint16_t addr, uint8_t *data, uint32_t num_bytes)
 {
-	struct sps30_data *drv_data = dev->data;
-	int ret;
+
 	uint8_t pms_receive_buffer[30];
+
 
 	// ---- Wake up sequence ---- //
 	(void)sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
-	ret = sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
+	int ret = sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
 	if (ret) {
 		return ret;
 	}
 
 
-	// delay(SPS_CMD_DELAY_USEC);
-	// ------------------------ //
+	// ---- Start measurement ---- //
+	uint8_t args_buf[2];
+	uint8_t start_buf[3];
 
-	ret = sps30_i2c_write(dev, SPS_CMD_START_MEASUREMENT, &data[0], 1); //start measurement
+	args_buf[0] = 0x03; // set arg big endian float values
+	args_buf[1] = 0x00; // dummy byte
+
+	start_buf[0] = args_buf[0]; 
+	start_buf[1] = args_buf[1]; 
+	start_buf[2] = check(args_buf); // checksum byte
+
+	ret = sps30_set_pointer_write(dev, start_buf , SPS_CMD_START_MEASUREMENT); // start measurement with arg
 
 	if (ret < 0)
-		LOG_DBG("Error starting measurement");
+	{
+		LOG_ERR("Error: Failed starting measurement");
 	return ret;
+	}
 
-	// wait function here 1s
+	// ---- read data ready flag ---- //
+	uint8_t flag_buf[3] // flag_buf[1] Data ready flag byte, 0x00: no new measurements, 0x01: new measurements to read
+
+	ret = sps30_set_pointer_read(dev, &flag_buf, SPS_CMD_START_STET_DATA_READY);
+
+	if (ret < 0)
+	{
+		LOG_ERR("Error: Failed to read data ready flag");
+	return ret;
+	}
+
+
 
 	ret = sps30_i2c_read(dev, SPS_CMD_READ_MEASUREMENT, &pms_receive_buffer[0], 30); //set data from measurement
 
@@ -155,17 +176,25 @@ int sps30_particle_read(const struct device *dev, uint16_t addr, uint8_t *data, 
 		LOG_DBG("typ_siz = %d", drv_data->typ_siz);
 	}
 
-	ret = sps30_set_pointer(dev, SPS_CMD_SLEEP); // Sleep mode
+
+	// ---- Stop measurement ---- //
+	ret = sps30_set_pointer(dev, SPS_CMD_STOP_MEASUREMENT);
 
 	if (ret < 0)
 	{
-		LOG_DBG("Failed to set device to sleep");
+		LOG_ERR("Error: Failed to set device to sleep");
 		return ret;
 	}
 
-	//sps30_i2c_write(pms_dev,SPS_CMD_RESET,&data[0],1)
+	// ---- Sleep Device ---- //
+	ret = sps30_set_pointer(dev, SPS_CMD_SLEEP);
 
-	//
+	if (ret < 0)
+	{
+		LOG_ERR("Error: Failed to set device to sleep");
+		return ret;
+	}
+
 	return 0;
 }
 
