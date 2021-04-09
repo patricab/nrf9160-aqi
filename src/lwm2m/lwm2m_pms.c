@@ -6,7 +6,6 @@
 
 #include "sps30_I2C.h"
 
-
 struct sps30_data {
 	const struct device *dev;
     uint16_t nc_2p5;
@@ -14,16 +13,13 @@ struct sps30_data {
     uint16_t typ_siz;
 };
 
-
 static const struct device *die_dev;
 
 static int32_t timestamp;
 
-static int read_pms(const struct device *die_dev,  ){
+static int read_pms(const struct device *die_dev, struct float32_value){
 
-	int ret;
-
-	ret = sps30_particle_read()
+	int ret = sps30_particle_read();
 	if (ret < 0)
 	{
 		LOG_ERR("Error: can't read data");
