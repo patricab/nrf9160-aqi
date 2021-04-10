@@ -1,3 +1,12 @@
+#ifndef sps30_h
+#define sps30_h
+
+#include <zephyr.h>
+#include <device.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <drivers/i2c.h>
+
 #define SPS_CMD_START_MEASUREMENT 0x0010
 #define SPS_CMD_START_MEASUREMENT_ARG 0x0300
 #define SPS_CMD_STOP_MEASUREMENT 0x0104
@@ -26,10 +35,10 @@
 
 struct sps30_data
 {
-	uint32_t nc_2p5; // Number concentration PM2.5 [#/cm^3]
-	uint32_t nc_10p0; // Number concentration PM10 [#/cm^3]
-	uint32_t typ_size; // Typical Particle Size [nm]
-}sps30;
+	float nc_2p5; // Number concentration PM2.5 [#/cm^3]
+	float nc_10p0; // Number concentration PM10 [#/cm^3]
+	float typ_size; // Typical Particle Size [nm]
+};
 
 /**
 	@brief Initialize sps30 library
@@ -38,7 +47,7 @@ struct sps30_data
 
 	@retval 0 if successful, 1 if errors occured
 */
-int sps30_init(const struct device *dev)
+int sps30_init(const struct device *dev, struct sps30_data *data);
 
 /**
 	@brief Read particle measurment
@@ -48,4 +57,5 @@ int sps30_init(const struct device *dev)
 
 	@retval 0 if successful, 1 if errors occured
 */
-int sps30_particle_read(const struct device *dev, struct *sps30_data)
+int sps30_particle_read(const struct device *dev);
+#endif

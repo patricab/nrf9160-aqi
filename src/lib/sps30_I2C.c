@@ -1,26 +1,10 @@
-#define DT_DRV_COMPAT sensirion_sps30
-
-/* sensor sps30.c - Driver for sensirion SPS30 sensor
- * SPS30 product: https://no.mouser.com/ProductDetail/Sensirion/SPS30/?qs=lc2O%252BfHJPVbEPY0RBeZmPA==
- * SPS30 spec: https://www.sensirion.com/fileadmin/user_upload/customers/sensirion/Dokumente/9.6_Particulate_Matter/Datasheets/Sensirion_PM_Sensors_Datasheet_SPS30.pdf
- */
-
-#include <drivers/sensor.h>
-#include <stdlib.h>
-#include <string.h>
-#include <arch/cpu.h>
-#include <errno.h>
-#include <drivers/i2c.h>
-#include <logging/log.h>
-#include <kernel.h>
-#include <init.h>
-#include <device.h>
-
 #include "sps30_I2C.h"
 
-LOG_MODULE_REGISTER(SPS30, CONFIG_SENSOR_LOG_LEVEL);
+#include <logging/log.h>
+LOG_MODULE_REGISTER(sps30, CONFIG_APP_LOG_LEVEL);
 
 const struct device *dev;
+struct sps30_data sps30;
 
 static uint8_t check(uint8_t data[2])
 {
@@ -108,11 +92,9 @@ static int sps30_set_pointer_write(const struct device *dev, uint16_t ptr, uint8
 
 	@retval 0 if successful, 1 if errors occured
 */
-int sps30_particle_read(const struct device *dev, struct *sps30_data)
+int sps30_particle_read(const struct device *dev)
 {
-
-	uint8_t pms_receive_buffer[30];
-
+	uint8_t rx_buf[60];
 
 	// ---- Wake up sequence ---- //
 	(void)sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
@@ -120,7 +102,6 @@ int sps30_particle_read(const struct device *dev, struct *sps30_data)
 	if (ret) {
 		return ret;
 	}
-
 
 	// ---- Start measurement ---- //
 	uint8_t args_buf[2];
@@ -156,15 +137,13 @@ int sps30_particle_read(const struct device *dev, struct *sps30_data)
 	//Read data flag
 
 	ret = sps30_i2c_read(dev, SPS_CMD_READ_MEASUREMENT, &pms_receive_buffer[0], 30); //set data from measurement
-	ret = sps30_set_pointer_read(dev, SPS_CMD_READ_MEASUREMENT, rx_buf, sizeof(rx_buf)); 
 	if (ret)
 		LOG_ERR("Failed to read measurement");
 		return ret;
 	}
-
-	sps30_data->nc_2p5 = (rx_buf[36] << 32) | (rx_buf[37] << 16) | (rx_buf[39] << 8) | rx_buf[40];
-	sps30_data->nc_10p0 = (rx_buf[48] << 32) | (rx_buf[49] << 16) | (rx_buf[51] << 8) | rx_buf[52];
-	sps30_data->typ_siz = (rx_buf[54] << 32) | (rx_buf[55] << 16) | (rx_buf[57] << 8) | rx_buf[58];
+	sps30.nc_2p5 = (rx_buf[36] << 32) | (rx_buf[37] << 16) | (rx_buf[39] << 8) | rx_buf[40];
+	sps30.nc_10p0 = (rx_buf[48] << 32) | (rx_buf[49] << 16) | (rx_buf[51] << 8) | rx_buf[52];
+	sps30.typ_siz = (rx_buf[54] << 32) | (rx_buf[55] << 16) | (rx_buf[57] << 8) | rx_buf[58];
 
 		LOG_DBG("nc_2p5 = %d", drv_data->nc_2p5);
 		LOG_DBG("nc_10 = %d", drv_data->nc_10p0);
@@ -202,16 +181,23 @@ int sps30_particle_read(const struct device *dev, struct *sps30_data)
 
 	@retval 0 if successful, 1 if errors occured
 */
-int sps30_init(const struct device *dev)
+int sps30_init(const struct device *dev, struct sps30_data *data) 
 {
+	sps30 = &data; // Make user struct global
+	
 	// nRF I2C master configuration
 	uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_MASTER;
 
 	uint8_t id[4];
 	uint32_t id32;
 
-
-	i2c_configure(dev, i2c_cfg);
+	int err = i2c_configure(dev, i2c_cfg);
+	if (err)
+	{
+		LOG_ERR("Error: could not configure i2c service");
+		return err;
+	}
+	
 
 	//-- device status register --//
 	// int ret = sps30_i2c_read(dev, SPS_CMD_READ_DEVICE_STATUS_REG, &id[0], 2);
