@@ -185,9 +185,7 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 	
 	// nRF I2C master configuration
 	uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_MASTER;
-
 	uint8_t id[6];
-	uint32_t id32;
 
 	int err = i2c_configure(dev, i2c_cfg);
 	if (err)
@@ -206,7 +204,7 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 		return ret;
 	}
 
-	id32 = (id[0] << 24) | (id[1] << 16) | (id[3] << 8) | id[4];
+	uint32_t id32 = (id[0] << 24) | (id[1] << 16) | (id[3] << 8) | id[4];
 
 	// bit 21 fan speed
 	if (id32 & SPS30_DEVICE_STATUS_FAN_ERROR_MASK)
