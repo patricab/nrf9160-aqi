@@ -31,7 +31,7 @@ static uint8_t check(uint8_t data[2])
 static int sps30_set_pointer(const struct device *dev, uint16_t ptr)
 {
 	// Pointer MSB and LSB
-	// Note: MSB = ptr: 000000000 XXXXXXXX
+	// Note: LSB = ptr: 000000000 XXXXXXXX
 	//		    & 0xFF:		      11111111	
 	//				  =			  XXXXXXXX
 	unsigned char p[2] = {ptr >> 8, ptr & 0xFF};
@@ -189,9 +189,7 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 	
 	// nRF I2C master configuration
 	uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_MASTER;
-
-	uint8_t id[4];
-	uint32_t id32;
+	uint8_t id[6];
 
 	int err = i2c_configure(dev, i2c_cfg);
 	if (err)
@@ -202,35 +200,36 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 	
 
 	//-- device status register --//
-	// int ret = sps30_i2c_read(dev, SPS_CMD_READ_DEVICE_STATUS_REG, &id[0], 2);
+	int ret = sps30_set_pointer_read(dev, SPS_CMD_READ_DEVICE_STATUS_REG, id);
 
-	// if (ret < 0)
-	// {
-	// 	return ret;
-	// }
-	// LOG_ERR("Error reading status register");
+	if (ret)
+	{
+		LOG_ERR("Error: Reading device status register");
+		return ret;
+	}
 
-	// id32 = (id[4] << 24) + (id[3] << 16) + (id[2] << 8) + id[1];
+	uint32_t id32 = (id[0] << 24) | (id[1] << 16) | (id[3] << 8) | id[4];
 
-	// // bit 21 fan speed
-	// if (id32 << SPS30_DEVICE_STATUS_FAN_ERROR_MASK)
-	// {
-	// 	LOG_ERR("Error: Fan speed out of range");
-	// 	return -EIO;
-	// }
+	// bit 21 fan speed
+	if (id32 & SPS30_DEVICE_STATUS_FAN_ERROR_MASK)
+	{
+		LOG_ERR("Error: Fan speed out of range");
+		return -EIO;
+	}
 
-	// // bit 5 laser failure
-	// if (id32 << SPS30_DEVICE_STATUS_LASER_ERROR_MASK)
-	// {
-	// 	LOG_ERR("Error: Laser failure");
-	// 	return -EIO;
-	// }
+	// bit 5 laser failure
+	if (id32 & SPS30_DEVICE_STATUS_LASER_ERROR_MASK)
+	{
+		LOG_ERR("Error: Laser failure");
+		return -EIO;
+	}
 
-	// // bit 4 fan failure
-	// if (id32 << SPS30_DEVICE_STATUS_FAN_SPEED_WARNING)
-	// {
-	// 	LOG_ERR("Error:Fan failure, fan is mechanically blocked or broken");
-	// 	return -EIO;
-	// }
+	// bit 4 fan failure
+	if (id32 & SPS30_DEVICE_STATUS_FAN_SPEED_WARNING)
+	{
+		LOG_ERR("Error:Fan failure, fan is mechanically blocked or broken");
+		return -EIO;
+	}
+
 	return 0;
 }
