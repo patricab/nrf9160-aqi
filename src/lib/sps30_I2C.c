@@ -31,7 +31,7 @@ static uint8_t check(uint8_t data[2])
 static int sps30_set_pointer(const struct device *dev, uint16_t ptr)
 {
 	// Pointer MSB and LSB
-	// Note: MSB = ptr: 000000000 XXXXXXXX
+	// Note: LSB = ptr: 000000000 XXXXXXXX
 	//		    & 0xFF:		      11111111	
 	//				  =			  XXXXXXXX
 	unsigned char p[2] = {ptr >> 8, ptr & 0xFF};
