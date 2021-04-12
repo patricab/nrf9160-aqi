@@ -70,10 +70,10 @@ public class ReadTimerTask extends TimerTask {
 		//sendReq(3300, 0, 5700); // Gas sensor
 		sendReq(3303, 0, 5700); // Temperature sensor
 		sendReq(3304, 0, 5700); // Humidity sensor
-		/*sendReq(3325, 0, 5700); // Concentration sensor
+		sendReq(3325, 0, 5700); // Concentration sensor
 		sendReq(10314, 0, 5700); // Particulate sensor 2.5PM
 		sendReq(10314, 1, 5700); // Particulate sensor 10PM
-		sendReq(10314, 2, 5700); // Particulate sensor Typisk PM*/
+		sendReq(10314, 2, 5700); // Particulate sensor Typisk PM
 
 		//sendReq(3335, 0, 5700); // Colour sensor
 

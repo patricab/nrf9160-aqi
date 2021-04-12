@@ -630,6 +630,8 @@ public class LeshanClientDemo {
         initializer.setInstancesForObject(OBJECT_ID_CONCENTRATION_SENSOR, new RandomConcentrationSensor());
         //initializer.setInstancesForObject(OBJECT_ID_COLOUR_SENSOR       , new RandomColourSensor());
         initializer.setInstancesForObject(OBJECT_ID_PARTICULATE_SENSOR  , new RandomParticulateSensor());
+        initializer.setInstancesForObject(OBJECT_ID_PARTICULATE_SENSOR  , new RandomParticulateSensor());
+        initializer.setInstancesForObject(OBJECT_ID_PARTICULATE_SENSOR  , new RandomParticulateSensor());
         List<LwM2mObjectEnabler> enablers = initializer.createAll();
 
         // Create CoAP Config

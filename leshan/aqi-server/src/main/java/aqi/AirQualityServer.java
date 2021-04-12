@@ -600,9 +600,9 @@ public class AirQualityServer {
 			public void registered(Registration registration, Registration previousReg,
 									Collection<Observation> previousObsersations) {
 				System.out.println("new device: " + registration);
-				timer = new Timer();
+				//timer = new Timer();
 				//timer.schedule(new ReadTimerTask(lwServer, registration), 1, 3000);
-				timer.schedule(new ReadTimerTask(lwServer, registration), 2500);
+				//timer.schedule(new ReadTimerTask(lwServer, registration), 2500);
 				//try {
 				//  ObserveResponse response = lwServer.send(registration, new ObserveRequest(3300,0,5700));
 				//} catch (Exception e) {}
@@ -646,11 +646,13 @@ public class AirQualityServer {
 			public void onSleeping(Registration registration) {
 				airqdb.setState(registration, false);
 				System.out.println("onSleeping " + registration);
+				timer.cancel();
 			}
 
 			public void onAwake(Registration registration) {
 				airqdb.setState(registration, true);
-				new ReadTimerTask(lwServer, registration);
+				timer = new Timer();
+				timer.schedule(new ReadTimerTask(lwServer, registration), 2500);
 				System.out.println("onAwake " + registration);
 			}
 		});
@@ -658,6 +660,7 @@ public class AirQualityServer {
 
 		// Start Jetty & Leshan
 		lwServer.start();
+		System.out.println("Leshan server started");
 		server.start();
 		LOG.info("Web server started at {}.", server.getURI());
 		System.out.println("Web server started at " + server.getURI());

@@ -50,7 +50,7 @@ select age(time, TO_TIMESTAMP(timestamp)),
 
 
 INSERT INTO devices(endpoint, online) 
-VALUES('test', false) 
+VALUES('airq', false) 
 ON CONFLICT (endpoint) 
 DO UPDATE SET online = EXCLUDED.online;
 
@@ -71,7 +71,12 @@ SELECT time,
 		WHEN 3304 THEN 'humidity'
 		WHEN 3325 THEN 'concentration'
 		WHEN 3335 THEN 'colour'
-		WHEN 10314 THEN 'particulate'
+		WHEN 10314 THEN 
+			CASE instance
+				WHEN 0 THEN 'PM2.5 particulate'
+				WHEN 1 THEN 'PM10 particulate'
+				WHEN 2 THEN 'Typical particulate'
+			END
 		ELSE 'unknown'
 	END sensor,
 	CAST(value AS decimal(38,2)),
