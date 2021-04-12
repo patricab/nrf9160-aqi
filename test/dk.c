@@ -20,6 +20,7 @@ static int * dec(float num) {
 static void btn_cb(uint32_t button_states, uint32_t has_changed)
 {
     if (has_changed & button_states & DK_BTN1_MSK) {
+        // printk("\nBtn1\n");
         int err = sps30_init(die_dev, &sps30);
         if (err)
         {
@@ -28,6 +29,7 @@ static void btn_cb(uint32_t button_states, uint32_t has_changed)
     }
     else if (has_changed & button_states & DK_BTN2_MSK)
     {
+        // printk("\nBtn2\n");
         int err = sps30_particle_read(die_dev);
         if (err)
         {
