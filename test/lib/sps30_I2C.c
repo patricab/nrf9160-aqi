@@ -37,8 +37,7 @@ static int sps30_set_pointer(const struct device *dev, uint16_t ptr)
 	//				  =			  XXXXXXXX
 	unsigned char p[2] = {ptr >> 8, ptr & 0xFF};
 
-	int err = i2c_write(dev, p, sizeof(p), SPS30_I2C_ADDRESS);
-	if (err == -EIO)
+	if (i2c_write(dev, p, sizeof(p), SPS30_I2C_ADDRESS))
 	{
 		printk("\nError: could not set pointer\n");
 		return 1;
@@ -56,8 +55,7 @@ static int sps30_set_pointer_read(const struct device *dev, uint16_t ptr, uint8_
 		return err;
 	}
 
-	err = i2c_read(dev, data, sizeof(data), SPS30_I2C_ADDRESS);
-	if (err == -EIO)
+	if (i2c_read(dev, data, sizeof(data), SPS30_I2C_ADDRESS))
 	{
 		return 1;
 	}
@@ -79,8 +77,7 @@ static int sps30_set_pointer_write(const struct device *dev, uint16_t ptr, uint8
 		data[i] = wr_data[i-2];
 	}
 
-	int err = i2c_write(dev, data, sizeof(data), SPS30_I2C_ADDRESS);
-	if (err == -EIO)
+	if (i2c_write(dev, data, sizeof(data), SPS30_I2C_ADDRESS))
 	{
 		printk("\nError: couln't write data\n");
 		return 1;
@@ -188,44 +185,42 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 	uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_MASTER;
 	uint8_t id[6];
 
-	int err = i2c_configure(dev, i2c_cfg);
-	if (err)
+	if (i2c_configure(dev, i2c_cfg))
 	{
 		printk("\nError: could not configure i2c service\n");
-		return err;
 	}
 	
 
 	//-- device status register --//
-	int ret = sps30_set_pointer_read(dev, SPS_CMD_READ_DEVICE_STATUS_REG, id);
-	if (ret)
-	{
-		printk("\nError: Reading device status register\n");
-		return ret;
-	}
+	// int ret = sps30_set_pointer_read(dev, SPS_CMD_READ_DEVICE_STATUS_REG, id);
+	// if (ret)
+	// {
+	// 	printk("\nError: Reading device status register\n");
+	// 	return ret;
+	// }
 
-	uint32_t id32 = (id[0] << 24) | (id[1] << 16) | (id[3] << 8) | id[4];
+	// uint32_t id32 = (id[0] << 24) | (id[1] << 16) | (id[3] << 8) | id[4];
 
-	// bit 21 fan speed
-	if (id32 & SPS30_DEVICE_STATUS_FAN_ERROR_MASK)
-	{
-		printk("\nError: Fan speed out of range\n");
-		return -EIO;
-	}
+	// // bit 21 fan speed
+	// if (id32 & SPS30_DEVICE_STATUS_FAN_ERROR_MASK)
+	// {
+	// 	printk("\nError: Fan speed out of range\n");
+	// 	return -EIO;
+	// }
 
-	// bit 5 laser failure
-	if (id32 & SPS30_DEVICE_STATUS_LASER_ERROR_MASK)
-	{
-		printk("\nError: Laser failure\n");
-		return -EIO;
-	}
+	// // bit 5 laser failure
+	// if (id32 & SPS30_DEVICE_STATUS_LASER_ERROR_MASK)
+	// {
+	// 	printk("\nError: Laser failure\n");
+	// 	return -EIO;
+	// }
 
-	// bit 4 fan failure
-	if (id32 & SPS30_DEVICE_STATUS_FAN_SPEED_WARNING)
-	{
-		printk("\nError: Fan failure, fan is mechanically blocked or broken\n");
-		return -EIO;
-	}
+	// // bit 4 fan failure
+	// if (id32 & SPS30_DEVICE_STATUS_FAN_SPEED_WARNING)
+	// {
+	// 	printk("\nError: Fan failure, fan is mechanically blocked or broken\n");
+	// 	return -EIO;
+	// }
 
 	return 0;
 }
