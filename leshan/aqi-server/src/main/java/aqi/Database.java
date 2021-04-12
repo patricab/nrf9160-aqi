@@ -47,6 +47,48 @@ public class Database {
 		return value;
 	}
 
+
+
+	public static void setState(Registration reg, boolean online) {
+		Statement stmt = null;
+		Connection conn = null;
+		String ep = reg.getEndpoint();
+		System.out.println("Connecting to database...");
+
+		String sql = "INSERT INTO devices(endpoint, online) " +
+		             "VALUES('" + ep + "', " + online + ") " +
+		             "ON CONFLICT (endpoint)" +
+		             "DO UPDATE SET " +
+		             "online = EXCLUDED.online," +
+		             "time = now();";
+		
+		System.out.println(sql);
+
+		try
+		{
+			Class.forName("org.postgresql.Driver");
+			conn = DriverManager.getConnection(DB_URL, user, pass);
+			System.out.println("INSERT data...");
+			stmt = conn.createStatement();
+			stmt.executeUpdate(sql);
+			System.out.println("INSERT data successfully! ");
+			stmt.close();//finally block used to close resources
+		
+		}
+		catch(SQLException se)
+		{
+			//Handle errors for JDBC
+			se.printStackTrace();
+		}
+		catch(Exception e)
+		{
+			//Handle errors for Class.forName
+			e.printStackTrace();
+		}
+	}
+
+
+
 	private static String getTimestamp(ReadResponse response) {
 		//Type type = ((LwM2mSingleResource)response.getContent()).getType();
 		//Object value = ((LwM2mSingleResource)response.getContent()).getValue();
@@ -58,10 +100,12 @@ public class Database {
 		return (String) (((LwM2mSingleResource)response.getContent()).getValue());
 	}
 
-	public static void observation(ObserveResponse response, String ep, 
-		LeshanServer server, Registration registration)
+
+
+	public static void observation(ReadResponse response, String ep, 
+		LeshanServer server, Registration registration, int obj, int inst, int res)
 	{
-		Observation observation = response.getObservation();
+	/*	Observation observation = response.getObservation();
 		List<TimestampedLwM2mNode> timestampedNodes = response.getTimestampedLwM2mNode();
 
 		System.out.println(timestampedNodes);
@@ -76,6 +120,13 @@ public class Database {
 		int obj  = path.getObjectId().intValue();
 		int inst = path.getObjectInstanceId().intValue();
 		int res  = path.getResourceId().intValue();
+	*/
+
+		//Value
+		LwM2mSingleResource resource = ((LwM2mSingleResource) response.getContent());
+
+		// LwM2mResource resource = (LwM2mResource) value;
+		// System.out.println("valeur observation : " + resource.getValue().value)
 
 		String timestamp = "0";
 
@@ -87,9 +138,8 @@ public class Database {
 			System.out.println("Error read timestamp" + obj + inst);
 		}
 
-
-		double val = (double) getValue(response);
-
+		double val = (double) resource.getValue();
+		//getValue(response);
 
 		Statement stmt = null;
 		Connection conn = null;

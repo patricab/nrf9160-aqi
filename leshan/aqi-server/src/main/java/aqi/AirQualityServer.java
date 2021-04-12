@@ -606,7 +606,7 @@ public class AirQualityServer {
 				//try {
 				//  ObserveResponse response = lwServer.send(registration, new ObserveRequest(3300,0,5700));
 				//} catch (Exception e) {}
-				
+				airqdb.setState(registration, true);
 			}
 
 			public void updated(RegistrationUpdate update,
@@ -628,8 +628,7 @@ public class AirQualityServer {
 				System.out.println("Receive notification from " + observation.getPath() 
 								  + " value " + response.getContent().toString());
 		
-				//airqdb.observation(rresponse, registration.getEndpoint());
-				airqdb.observation(response, registration.getEndpoint(), lwServer, registration);
+				//airqdb.observation(response, registration.getEndpoint(), lwServer, registration);
 			}
 
 			public void cancelled(Observation observation) {
@@ -645,10 +644,13 @@ public class AirQualityServer {
 
 		lwServer.getPresenceService().addListener(new PresenceListener () {
 			public void onSleeping(Registration registration) {
+				airqdb.setState(registration, false);
 				System.out.println("onSleeping " + registration);
 			}
 
 			public void onAwake(Registration registration) {
+				airqdb.setState(registration, true);
+				new ReadTimerTask(lwServer, registration);
 				System.out.println("onAwake " + registration);
 			}
 		});

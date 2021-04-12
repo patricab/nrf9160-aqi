@@ -43,9 +43,9 @@ public class RandomParticulateSensor extends BaseInstanceEnabler implements Dest
 	private final Random rng = new Random();
 	private Date timestamp;
 	private String application_type;
-	private double currentParticulate = 100d;
-	private double minMeasuredValue = currentParticulate;
-	private double maxMeasuredValue = currentParticulate;
+	private float currentParticulate = 100f;
+	private float minMeasuredValue = currentParticulate;
+	private float maxMeasuredValue = currentParticulate;
 
 	public RandomParticulateSensor() {
 		this.scheduler = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Particulate Sensor"));
@@ -95,7 +95,7 @@ public class RandomParticulateSensor extends BaseInstanceEnabler implements Dest
 		}
 	}
 
-	private double getTwoDigitValue(double value) {
+	private float getTwoDigitValue(float value) {
 		BigDecimal toBeTruncated = BigDecimal.valueOf(value);
 		return toBeTruncated.setScale(2, RoundingMode.HALF_UP).intValue();
 	}
@@ -112,7 +112,7 @@ public class RandomParticulateSensor extends BaseInstanceEnabler implements Dest
 		}
 	}
 
-	private synchronized Integer adjustMinMaxMeasuredValue(double newParticulate) {
+	private synchronized Integer adjustMinMaxMeasuredValue(float newParticulate) {
 		if (newParticulate > maxMeasuredValue) {
 			maxMeasuredValue = newParticulate;
 			return MAX_MEASURED_VALUE;

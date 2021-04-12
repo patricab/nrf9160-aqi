@@ -106,7 +106,7 @@ public class AQIServer
 				//try {
 				//	ObserveResponse response = leshanServer.send(registration, new ObserveRequest(3300,0,5700));
 				//} catch (Exception e) {}
-				
+				airqdb.setState(registration, true);
 			}
 
 			public void updated(RegistrationUpdate update,
@@ -119,6 +119,7 @@ public class AQIServer
 				                      boolean expired, Registration newReg) {
 				System.out.println("device left: " + registration.getEndpoint() + observations);
 				timer.cancel();
+				airqdb.setState(registration, false);
 			}
 		});
 
@@ -128,8 +129,7 @@ public class AQIServer
 				System.out.println("Receive notification from " + observation.getPath() 
 					              + " value " + response.getContent().toString());
 		
-				//airqdb.observation(rresponse, registration.getEndpoint());
-				airqdb.observation(response, registration.getEndpoint(), leshanServer, registration);
+				//airqdb.observation(response, registration.getEndpoint(), leshanServer, registration);
 			}
 
 			public void cancelled(Observation observation) {
@@ -145,10 +145,12 @@ public class AQIServer
 
 		leshanServer.getPresenceService().addListener(new PresenceListener () {
 			public void onSleeping(Registration registration) {
+				airqdb.setState(registration, false);
 				System.out.println("onSleeping " + registration);
 			}
 
 			public void onAwake(Registration registration) {
+				airqdb.setState(registration, true);
 				System.out.println("onAwake " + registration);
 			}
 		});
@@ -292,6 +294,7 @@ public class AQIServer
 		// Start Jetty & Leshan
 		try {
 			leshanServer.start();
+			System.out.println("Leshan Server started.");
 			//webServer.start();
 			//System.out.println("Web server started at: " + webServer.getURI());
 		} catch (Exception e) {

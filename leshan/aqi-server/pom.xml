@@ -90,8 +90,8 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>aqi.AQIServer</mainClass>
-							<!--<mainClass>aqi.AirQualityServer</mainClass>-->
+							<!--<mainClass>aqi.AQIServer</mainClass>-->
+							<mainClass>aqi.AirQualityServer</mainClass>
 						</manifest>
 					</archive>
 					<descriptors>
