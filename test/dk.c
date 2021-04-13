@@ -53,7 +53,7 @@ static void btn_cb(uint32_t button_states, uint32_t has_changed)
 // Initalize buttons library and wait for button state change
 void main(void) {
     // Configure device
-	die_dev = device_get_binding(DT_LABEL(DT_NODELABEL(i2c2)));
+	die_dev = device_get_binding("SPS30");
 	if (!die_dev)
 	{
 		printk("No device found.");
