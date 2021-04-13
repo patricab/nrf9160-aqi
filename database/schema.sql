@@ -60,6 +60,21 @@ SELECT time, age(DATE_TRUNC('second', now()), DATE_TRUNC('second', time)), ep, C
 WHERE object = 3303
 order by time desc;
 
+DROP VIEW IF EXISTS particulate CASCADE;
+CREATE VIEW particulate AS 
+SELECT time,
+	age(DATE_TRUNC('second', now()), DATE_TRUNC('second', time)),
+	ep,
+	CASE instance
+		WHEN 0 THEN 'PM2.5'
+		WHEN 1 THEN 'PM10'
+		WHEN 2 THEN 'Typical'
+	END size,
+	CAST(value AS decimal(38,2)),
+	CASE object WHEN 10314 THEN 'ppm' END unit FROM observation
+WHERE object = 10314
+order by time desc;
+
 DROP VIEW IF EXISTS sensors CASCADE;
 CREATE VIEW sensors AS 
 SELECT time,

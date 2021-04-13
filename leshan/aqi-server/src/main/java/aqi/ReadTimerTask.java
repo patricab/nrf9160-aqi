@@ -67,7 +67,7 @@ public class ReadTimerTask extends TimerTask {
 	@Override
 	public void run() {
 		//sendReq(3,0,13);
-		//sendReq(3300, 0, 5700); // Gas sensor
+		sendReq(3300, 0, 5700); // Gas sensor
 		sendReq(3303, 0, 5700); // Temperature sensor
 		sendReq(3304, 0, 5700); // Humidity sensor
 		sendReq(3325, 0, 5700); // Concentration sensor
