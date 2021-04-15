@@ -118,13 +118,12 @@ int sps30_particle_read(const struct device *dev)
 	}
 	
 	k_sleep(K_MSEC(1000));
+
 	// ---- Start measurement ---- //
 	unsigned char start_buf[3];
-	uint16_t ptr = SPS_CMD_START_MEASUREMENT;
 	unsigned char args_buf[2];
 	args_buf[0] = 0x03; // set arg big endian float values
 	args_buf[1] = 0x00; // dummy byte
-	
 
 	start_buf[0] = args_buf[0];
 	start_buf[1] = args_buf[1];
@@ -151,11 +150,16 @@ int sps30_particle_read(const struct device *dev)
 	
 	while (flag_buf[1] == 0x00)
 	{
+		#if defined(CONFIG_LOG)
 		printk("\n measuring \n");
 		k_sleep(K_MSEC(1000));
+		#endif
 		(void)sps30_set_pointer_read(dev, SPS_CMD_START_STET_DATA_READY, flag_buf);
 	}
-		printk("\n data ready flag = %d \n",flag_buf[1]);
+
+	#if defined(CONFIG_LOG)
+	printk("\n data ready flag = %d \n",flag_buf[1]);
+	#endif
 
 	ret = sps30_set_pointer_read(dev, SPS_CMD_READ_MEASUREMENT, rx_buf); 
 	if (ret)
@@ -169,10 +173,9 @@ int sps30_particle_read(const struct device *dev)
 	sps30.typ_size = (rx_buf[54] << 24) | (rx_buf[55] << 16) | (rx_buf[57] << 8) | rx_buf[58];
 
 	int *r = dec(sps30.nc_2p5);
+	#if defined(CONFIG_LOG)
     printk("\nnc_2p5 = %d %d\n", r[0], r[1]);
-	// LOG_DBG("nc_2p5 = %d", drv_data->nc_2p5);
-	// LOG_DBG("nc_10 = %d", drv_data->nc_10p0);
-	// LOG_DBG("typ_siz = %d", drv_data->typ_siz);
+	#endif
 
 	// Stop measurment
 	ret = sps30_set_pointer(dev,SPS_CMD_STOP_MEASUREMENT);
@@ -181,7 +184,9 @@ int sps30_particle_read(const struct device *dev)
 		printk("\nError: Failed to stop measurement\n");
 		return ret;
 	}
+
 	k_sleep(K_MSEC(1000));
+	
 	// Sleep mode
 	ret = sps30_set_pointer(dev, SPS_CMD_SLEEP); 
 	if (ret)
@@ -189,7 +194,9 @@ int sps30_particle_read(const struct device *dev)
 		printk("\nError: Failed to set device to sleep\n");
 		return ret;
 	}
+	#if defined(CONFIG_LOG)
 	printk("\n entering sleep mode \n");
+	#endif
 
 	return 0;
 }
@@ -214,6 +221,9 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 		printk("\nError: could not configure i2c service\n");
 	}
 	
+	#if defined(CONFIG_LOG)
+	printk("\nInit done\n");
+	#endif
 
 	//-- device status register --//
 	/*
@@ -247,6 +257,5 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 		return -EIO;
 	}
 	*/
-	//printk("\nInit done\n");
 	return 0;
 }

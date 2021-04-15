@@ -2,6 +2,7 @@
 
 #include <dk_buttons_and_leds.h>
 #include <sys/printk.h>
+#include <math.h>
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(dk, CONFIG_APP_LOG_LEVEL);
@@ -9,11 +10,13 @@ LOG_MODULE_REGISTER(dk, CONFIG_APP_LOG_LEVEL);
 static const struct device *die_dev;
 struct sps30_data sps30;
 
-static int * dec(float num) {
+static int *dec(double num) {
+    // Based on https://www.techonthenet.com/c_language/standard_library_functions/math_h/modf.php
     static int r[2];
-    r[0] = (int)num;
-    r[1] = num - r[0];
+    double frac;
 
+    r[0] = modf(num, &frac);
+    r[1] = frac;
     return r;
 }
 
@@ -45,10 +48,6 @@ static void btn_cb(uint32_t button_states, uint32_t has_changed)
         printk("\nnc_10 = %d %d\n", r[0], r[1]);
         r = dec(sps30.typ_size);
         printk("\ntyp_size = %d %d\n", r[0], r[1]);
-      
-      
-
-       
     }
     // else if (has_changed & button_states & DK_BTN3_MSK)
     // {

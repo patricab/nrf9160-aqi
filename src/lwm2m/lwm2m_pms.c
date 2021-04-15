@@ -14,12 +14,12 @@ static struct float32_value pms_float[3];
 static int32_t timestamp;
 
 // Convert float to float32 structure values
-static void float_struct(float num, struct float32_value *strct) {
-	int intpart = (int)num;
-	int decpart = num - intpart;
+static void float_struct(double num, struct float32_value *strct) {
+    // Based on https://www.techonthenet.com/c_language/standard_library_functions/math_h/modf.php
+    double intp;
 
-	float_val->val1 = intpart;
-	float_val->val2 = decpart;
+	strct->val1 = intp;
+	strct->val2 = modf(num, &intp) * 1000000;
 }
 
 static int read_pms(const struct device *die_dev, struct float32_value *float_val){
