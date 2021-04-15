@@ -75,7 +75,7 @@ static int sps30_set_pointer_write(const struct device *dev, uint16_t ptr, uint8
 	data[0] = (ptr & 0xFF00) >> 8;
 	data[1] = ptr & 0x00FF;
 
-	for (int i = 2; i < sizeof(wr_data); i++)
+	for (int i = 2; i <= sizeof(wr_data); i++)
 	{
 		data[i] = wr_data[i-2];
 	}
@@ -116,10 +116,12 @@ int sps30_particle_read(const struct device *dev)
 		printk("\nCould not wake up 2\n");
 		return ret;
 	}
+	
 	k_sleep(K_MSEC(1000));
 	// ---- Start measurement ---- //
 	unsigned char start_buf[3];
 	uint16_t ptr = SPS_CMD_START_MEASUREMENT;
+	unsigned char args_buf[2];
 	args_buf[0] = 0x03; // set arg big endian float values
 	args_buf[1] = 0x00; // dummy byte
 	
@@ -214,35 +216,37 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 	
 
 	//-- device status register --//
-	// int ret = sps30_set_pointer_read(dev, SPS_CMD_READ_DEVICE_STATUS_REG, id);
-	// if (ret)
-	// {
-	// 	printk("\nError: Reading device status register\n");
-	// 	return ret;
-	// }
+	/*
+	int ret = sps30_set_pointer_read(dev, SPS_CMD_READ_DEVICE_STATUS_REG, id);
+	if (ret)
+	{
+		printk("\nError: Reading device status register\n");
+		return ret;
+	}
 
-	// uint32_t id32 = (id[0] << 24) | (id[1] << 16) | (id[3] << 8) | id[4];
+	uint32_t id32 = (id[0] << 24) | (id[1] << 16) | (id[3] << 8) | id[4];
 
-	// // bit 21 fan speed
-	// if (id32 & SPS30_DEVICE_STATUS_FAN_ERROR_MASK)
-	// {
-	// 	printk("\nError: Fan speed out of range\n");
-	// 	return -EIO;
-	// }
+	// bit 21 fan speed
+	if (id32 & SPS30_DEVICE_STATUS_FAN_ERROR_MASK)
+	{
+		printk("\nError: Fan speed out of range\n");
+		return -EIO;
+	}
 
-	// // bit 5 laser failure
-	// if (id32 & SPS30_DEVICE_STATUS_LASER_ERROR_MASK)
-	// {
-	// 	printk("\nError: Laser failure\n");
-	// 	return -EIO;
-	// }
+	// bit 5 laser failure
+	if (id32 & SPS30_DEVICE_STATUS_LASER_ERROR_MASK)
+	{
+		printk("\nError: Laser failure\n");
+		return -EIO;
+	}
 
-	// // bit 4 fan failure
-	// if (id32 & SPS30_DEVICE_STATUS_FAN_SPEED_WARNING)
-	// {
-	// 	printk("\nError: Fan failure, fan is mechanically blocked or broken\n");
-	// 	return -EIO;
-	// }
-
+	// bit 4 fan failure
+	if (id32 & SPS30_DEVICE_STATUS_FAN_SPEED_WARNING)
+	{
+		printk("\nError: Fan failure, fan is mechanically blocked or broken\n");
+		return -EIO;
+	}
+	*/
+	//printk("\nInit done\n");
 	return 0;
 }
