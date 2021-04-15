@@ -7,7 +7,7 @@
 LOG_MODULE_REGISTER(dk, CONFIG_APP_LOG_LEVEL);
 
 static const struct device *die_dev;
-static struct sps30_data sps30;
+struct sps30_data sps30;
 
 static int * dec(float num) {
     static int r[2];
@@ -30,18 +30,25 @@ static void btn_cb(uint32_t button_states, uint32_t has_changed)
     else if (has_changed & button_states & DK_BTN2_MSK)
     {
         // printk("\nBtn2\n");
+     
+     
         int err = sps30_particle_read(die_dev);
         if (err)
         {
             printk("Error: could not read measurement");
+
         }
-        
+        k_sleep(K_MSEC(1000));
         int *r = dec(sps30.nc_2p5);
-        printk("nc_2p5 = %d %d", r[0], r[1]);
+        printk("\nnc_2p5 = %d %d\n", r[0], r[1]);
         r = dec(sps30.nc_10p0);
-        printk("nc_10 = %d %d", r[0], r[1]);
+        printk("\nnc_10 = %d %d\n", r[0], r[1]);
         r = dec(sps30.typ_size);
-        printk("typ_size = %d %d", r[0], r[1]);
+        printk("\ntyp_size = %d %d\n", r[0], r[1]);
+      
+      
+
+       
     }
     // else if (has_changed & button_states & DK_BTN3_MSK)
     // {
@@ -53,7 +60,7 @@ static void btn_cb(uint32_t button_states, uint32_t has_changed)
 // Initalize buttons library and wait for button state change
 void main(void) {
     // Configure device
-	die_dev = device_get_binding("SPS30");
+	die_dev = device_get_binding(DT_LABEL(DT_NODELABEL(i2c3)));
 	if (!die_dev)
 	{
 		printk("No device found.");
