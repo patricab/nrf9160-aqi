@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <drivers/i2c.h>
+#include <math.h>
 
 #define SPS_CMD_START_MEASUREMENT 0x0010
 #define SPS_CMD_START_MEASUREMENT_ARG 0x0300
@@ -35,9 +36,9 @@
 
 struct sps30_data
 {
-	float nc_2p5; // Number concentration PM2.5 [#/cm^3]
-	float nc_10p0; // Number concentration PM10 [#/cm^3]
-	float typ_size; // Typical Particle Size [nm]
+	double nc_2p5; // Number concentration PM2.5 [#/cm^3]
+	double nc_10p0; // Number concentration PM10 [#/cm^3]
+	double typ_size; // Typical Particle Size [nm]
 };
 
 /**
