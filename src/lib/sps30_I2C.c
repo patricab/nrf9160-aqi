@@ -1,10 +1,11 @@
 #include "sps30_I2C.h"
+#include <sys/printk.h>
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(sps30, CONFIG_APP_LOG_LEVEL);
 
 const struct device *dev;
-struct sps30_data sps30;
+extern struct sps30_data sps30;
 
 static uint8_t check(uint8_t data[2])
 {
@@ -34,13 +35,15 @@ static int sps30_set_pointer(const struct device *dev, uint16_t ptr)
 	// Note: LSB = ptr: 000000000 XXXXXXXX
 	//		    & 0xFF:		      11111111	
 	//				  =			  XXXXXXXX
-	unsigned char p[2] = {ptr >> 8, ptr & 0xFF};
+	unsigned char p[2];
+	p[0] = (ptr & 0xFF00) >> 8;
+	p[1] = ptr & 0x00FF;
 
-	int err = i2c_write(dev, p, sizeof(p), SPS30_I2C_ADDRESS);
-	if (err == -EIO)
+	int ret = i2c_write(dev, p, 2, SPS30_I2C_ADDRESS);
+	if (ret)
 	{
-		LOG_ERR("Error: could not set pointer");
-		return 1;
+		printk("\nError: could not set pointer\n");
+		return ret;
 	}
 	
 	return 0;
@@ -55,8 +58,7 @@ static int sps30_set_pointer_read(const struct device *dev, uint16_t ptr, uint8_
 		return err;
 	}
 
-	err = i2c_read(dev, data, sizeof(data), SPS30_I2C_ADDRESS);
-	if (err == -EIO)
+	if (i2c_read(dev, data, sizeof(data), SPS30_I2C_ADDRESS))
 	{
 		return 1;
 	}
@@ -70,21 +72,28 @@ static int sps30_set_pointer_write(const struct device *dev, uint16_t ptr, uint8
 	unsigned char data[5];
 
 	// address pointer
-	data[0] = ptr >> 8;
-	data[1] = ptr & 0xFF;
+	data[0] = (ptr & 0xFF00) >> 8;
+	data[1] = ptr & 0x00FF;
 
-	for (int i = 2; i < sizeof(wr_data); i++)
+	for (int i = 2; i <= sizeof(wr_data); i++)
 	{
 		data[i] = wr_data[i-2];
 	}
 
-	int err = i2c_write(dev, data, sizeof(data), SPS30_I2C_ADDRESS);
-	if (err == -EIO)
+	if (i2c_write(dev, data, sizeof(data), SPS30_I2C_ADDRESS))
 	{
-		LOG_ERR("Error: couln't write data");
+		printk("\nError: couln't write data\n");
 		return 1;
 	}
 	return 0;
+}
+
+static int * dec(float num) {
+    static int r[2];
+    r[0] = (int)num;
+    r[1] = num - r[0];
+
+    return r;
 }
 
 /**
@@ -97,51 +106,65 @@ static int sps30_set_pointer_write(const struct device *dev, uint16_t ptr, uint8
 */
 int sps30_particle_read(const struct device *dev)
 {
-	uint8_t rx_buf[60];
-
+	unsigned char rx_buf[60];
+	int ret;
+	
 	// ---- Wake up sequence ---- //
 	(void)sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
-	int ret = sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
+	ret = sps30_set_pointer(dev, SPS_CMD_WAKE_UP);
 	if (ret) {
+		printk("\nCould not wake up 2\n");
 		return ret;
 	}
+	
+	k_sleep(K_MSEC(1000));
 
 	// ---- Start measurement ---- //
-	uint8_t args_buf[2];
-	uint8_t start_buf[3];
-
+	unsigned char start_buf[3];
+	unsigned char args_buf[2];
 	args_buf[0] = 0x03; // set arg big endian float values
 	args_buf[1] = 0x00; // dummy byte
 
-	start_buf[0] = args_buf[0]; 
-	start_buf[1] = args_buf[1]; 
+	start_buf[0] = args_buf[0];
+	start_buf[1] = args_buf[1];
 	start_buf[2] = check(args_buf); // checksum byte
 
-	ret = sps30_set_pointer_write(dev, SPS_CMD_START_MEASUREMENT, start_buf); // start measurement with arg
+	ret = sps30_set_pointer_write(dev, SPS_CMD_START_MEASUREMENT, start_buf);
 	if (ret)
 	{
-		LOG_ERR("Error: Failed starting measurement");
+		printk("\nError: Failed starting measurement\n");
 		return ret;
 	}
+	
+	k_sleep(K_MSEC(1000));
 
 	// ---- read data ready flag ---- //
-	uint8_t flag_buf[3]; 
 	// flag_buf[0] = 0x00; flag_buf[1] Data ready flag byte, 0x00: no new measurements, 0x01: new measurements to read; flag_buf[3]: checksum
+	unsigned char flag_buf[3]; 
 	ret = sps30_set_pointer_read(dev, SPS_CMD_START_STET_DATA_READY, flag_buf);
 	if (ret)
 	{
-		LOG_ERR("Error: Failed to read data ready flag");
+		printk("\nError: Failed to read data ready flag\n");
 		return ret;
 	}
-
-	// Read measured values (60 bytes)
-	while (flag_buf[1] == 0x00) { // Wait for data-ready flag
+	
+	while (flag_buf[1] == 0x00)
+	{
+		#if defined(CONFIG_LOG)
+		printk("\n measuring \n");
+		k_sleep(K_MSEC(1000));
+		#endif
+		(void)sps30_set_pointer_read(dev, SPS_CMD_START_STET_DATA_READY, flag_buf);
 	}
+
+	#if defined(CONFIG_LOG)
+	printk("\n data ready flag = %d \n",flag_buf[1]);
+	#endif
 
 	ret = sps30_set_pointer_read(dev, SPS_CMD_READ_MEASUREMENT, rx_buf); 
 	if (ret)
 	{
-		LOG_ERR("Failed to read measurement");
+		printk("\nFailed to read measurement\n");
 		return ret;
 	}
 
@@ -149,25 +172,31 @@ int sps30_particle_read(const struct device *dev)
 	sps30.nc_10p0 = (rx_buf[48] << 24) | (rx_buf[49] << 16) | (rx_buf[51] << 8) | rx_buf[52];
 	sps30.typ_size = (rx_buf[54] << 24) | (rx_buf[55] << 16) | (rx_buf[57] << 8) | rx_buf[58];
 
-	// LOG_DBG("nc_2p5 = %d", drv_data->nc_2p5);
-	// LOG_DBG("nc_10 = %d", drv_data->nc_10p0);
-	// LOG_DBG("typ_siz = %d", drv_data->typ_siz);
+	int *r = dec(sps30.nc_2p5);
+	#if defined(CONFIG_LOG)
+    printk("\nnc_2p5 = %d %d\n", r[0], r[1]);
+	#endif
 
 	// Stop measurment
-	ret = sps30_set_pointer(dev, SPS_CMD_STOP_MEASUREMENT);
+	ret = sps30_set_pointer(dev,SPS_CMD_STOP_MEASUREMENT);
 	if (ret)
 	{
-		LOG_ERR("Error: Failed to stop measurement");
+		printk("\nError: Failed to stop measurement\n");
 		return ret;
 	}
 
+	k_sleep(K_MSEC(1000));
+	
 	// Sleep mode
 	ret = sps30_set_pointer(dev, SPS_CMD_SLEEP); 
 	if (ret)
 	{
-		LOG_ERR("Error: Failed to set device to sleep");
+		printk("\nError: Failed to set device to sleep\n");
 		return ret;
 	}
+	#if defined(CONFIG_LOG)
+	printk("\n entering sleep mode \n");
+	#endif
 
 	return 0;
 }
@@ -187,20 +216,21 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 	uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_MASTER;
 	uint8_t id[6];
 
-	int err = i2c_configure(dev, i2c_cfg);
-	if (err)
+	if (i2c_configure(dev, i2c_cfg))
 	{
-		LOG_ERR("Error: could not configure i2c service");
-		return err;
+		printk("\nError: could not configure i2c service\n");
 	}
 	
+	#if defined(CONFIG_LOG)
+	printk("\nInit done\n");
+	#endif
 
 	//-- device status register --//
+	/*
 	int ret = sps30_set_pointer_read(dev, SPS_CMD_READ_DEVICE_STATUS_REG, id);
-
 	if (ret)
 	{
-		LOG_ERR("Error: Reading device status register");
+		printk("\nError: Reading device status register\n");
 		return ret;
 	}
 
@@ -209,23 +239,23 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 	// bit 21 fan speed
 	if (id32 & SPS30_DEVICE_STATUS_FAN_ERROR_MASK)
 	{
-		LOG_ERR("Error: Fan speed out of range");
+		printk("\nError: Fan speed out of range\n");
 		return -EIO;
 	}
 
 	// bit 5 laser failure
 	if (id32 & SPS30_DEVICE_STATUS_LASER_ERROR_MASK)
 	{
-		LOG_ERR("Error: Laser failure");
+		printk("\nError: Laser failure\n");
 		return -EIO;
 	}
 
 	// bit 4 fan failure
 	if (id32 & SPS30_DEVICE_STATUS_FAN_SPEED_WARNING)
 	{
-		LOG_ERR("Error:Fan failure, fan is mechanically blocked or broken");
+		printk("\nError: Fan failure, fan is mechanically blocked or broken\n");
 		return -EIO;
 	}
-
+	*/
 	return 0;
 }
