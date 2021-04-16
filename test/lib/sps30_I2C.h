@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <drivers/i2c.h>
+#include <math.h>
 
 #define SPS_CMD_START_MEASUREMENT 0x0010
 #define SPS_CMD_START_MEASUREMENT_ARG 0x0300
