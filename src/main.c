@@ -153,7 +153,7 @@ static int lwm2m_setup(void)
 	lwm2m_init_conc();
 #endif
 #if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
-	lwm2m_init_prtcl();
+	lwm2m_init_pms();
 #endif
 #if defined(CONFIG_UI_BUZZER)
 	lwm2m_init_buzzer();

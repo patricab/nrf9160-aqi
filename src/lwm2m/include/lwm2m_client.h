@@ -61,7 +61,7 @@ int lwm2m_init_colour(void);
 #endif
 
 #if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
-int lwm2m_init_prtcl(void);
+int lwm2m_init_pms(void);
 #endif
 
 #if defined(CONFIG_UI_BUZZER)
