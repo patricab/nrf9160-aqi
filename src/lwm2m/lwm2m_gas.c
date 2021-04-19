@@ -65,7 +65,7 @@ static void *gas_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_ins
 
 int lwm2m_init_gas(void)
 {
-	die_dev = device_get_binding(DT_LABEL(DT_NODELABEL(uart0)));
+	die_dev = device_get_binding(DT_LABEL(DT_NODELABEL(uart1)));
 	if (!die_dev)
 	{
 		LOG_ERR("No device found.");
