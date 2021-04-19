@@ -16,16 +16,18 @@
 LOG_MODULE_REGISTER(app_lwm2m_gas, CONFIG_APP_LOG_LEVEL);
 
 /* use 0 PPB if no sensor available */
-static int16_t *val;
+// static int16_t *val;
+static struct float32_value gas_float;
 static const struct device *die_dev;
 
 static int32_t timestamp;
 
-static int read_val(const struct device *die_dev,
-					int16_t *sens_val)
+static int read_val(const struct device *temp_dev,
+			    struct float32_value *float_val)
 {
+	int32_t *val = 0;
 
-	int err = read_gas(sens_val);
+	int err = read_gas(val);
 	if (err)
 	{
 		LOG_ERR("Error: can't get data");
@@ -33,6 +35,8 @@ static int read_val(const struct device *die_dev,
 	}
 
 	standby_gas(); // Set sensor to low power mode
+
+	float_val->val1 = *val;
 	return 0;
 }
 
@@ -48,15 +52,15 @@ static void *gas_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_ins
 		return NULL;
 	}
 
-	read_val(die_dev, val);
-	lwm2m_engine_set_s16("3325/0/5529", *val);
-	*data_len = sizeof(val);
+	read_val(die_dev, &gas_float);
+	lwm2m_engine_set_float32("3325/0/5700", &gas_float);
+	*data_len = sizeof(gas_float);
 	/* get current time from device */
 	lwm2m_engine_get_s32("3/0/13", &ts);
 	/* set timestamp */
 	lwm2m_engine_set_s32("3325/0/5518", ts);
 
-	return &val;
+	return &gas_float;
 }
 
 int lwm2m_init_gas(void)
@@ -75,7 +79,7 @@ int lwm2m_init_gas(void)
 	}
 
 	lwm2m_engine_create_obj_inst("3325/0");
-	lwm2m_engine_register_read_callback("3325/0/5529", gas_read_cb);
+	lwm2m_engine_register_read_callback("3325/0/5700", gas_read_cb);
 	lwm2m_engine_set_res_data("3325/0/5518",
 							  &timestamp, sizeof(timestamp), 0);
 	return 0;

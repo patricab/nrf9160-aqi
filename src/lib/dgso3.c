@@ -49,7 +49,7 @@ static void uart_rx() {
 
    @retval 0 if successful, 1 if errors occured
 */
-int read_gas(int16_t *rx_val) {
+int read_gas(int32_t *rx_val) {
    /* Send command */
    printk("\r");
 
@@ -62,7 +62,7 @@ int read_gas(int16_t *rx_val) {
    }
 
    // // Output rx buffer
-   sscanf(rx_buf, "%d", (int *)&rx_val);
+   sscanf(rx_buf, "%d", rx_val);
    return 0;
 }
 
