@@ -17,7 +17,8 @@ LOG_MODULE_REGISTER(app_lwm2m_gas, CONFIG_APP_LOG_LEVEL);
 
 /* use 0 PPB if no sensor available */
 // static int16_t *val;
-static struct float32_value gas_float;
+// static struct float32_value gas_float;
+static struct float32_value gas_float = {123, 00};
 static const struct device *die_dev;
 
 static int32_t timestamp;
@@ -52,13 +53,13 @@ static void *gas_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_ins
 		return NULL;
 	}
 
-	read_val(die_dev, &gas_float);
-	lwm2m_engine_set_float32("3325/0/5700", &gas_float);
+	// read_val(die_dev, &gas_float);
+	lwm2m_engine_set_float32("3303/0/5700", &gas_float);
 	*data_len = sizeof(gas_float);
 	/* get current time from device */
 	lwm2m_engine_get_s32("3/0/13", &ts);
 	/* set timestamp */
-	lwm2m_engine_set_s32("3325/0/5518", ts);
+	lwm2m_engine_set_s32("3303/0/5518", ts);
 
 	return &gas_float;
 }
@@ -78,9 +79,9 @@ int lwm2m_init_gas(void)
 		// return 1;
 	}
 
-	lwm2m_engine_create_obj_inst("3325/0");
-	lwm2m_engine_register_read_callback("3325/0/5700", gas_read_cb);
-	lwm2m_engine_set_res_data("3325/0/5518",
+	lwm2m_engine_create_obj_inst("3303/0");
+	lwm2m_engine_register_read_callback("3303/0/5700", gas_read_cb);
+	lwm2m_engine_set_res_data("3303/0/5518",
 							  &timestamp, sizeof(timestamp), 0);
 	return 0;
 }
