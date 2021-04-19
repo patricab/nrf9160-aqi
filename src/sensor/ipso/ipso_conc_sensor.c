@@ -242,6 +242,7 @@ static struct lwm2m_engine_obj_inst *conc_sensor_create(uint16_t obj_inst_id)
 
 static int ipso_conc_sensor_init(const struct device *dev)
 {
+	LOG_ERR(" create object concentration!");
 	conc_sensor.obj_id = IPSO_OBJECT_CONC_SENSOR_ID;
 	conc_sensor.fields = fields;
 	conc_sensor.field_count = ARRAY_SIZE(fields);

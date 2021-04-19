@@ -11,7 +11,7 @@
  * Section: "10. IPSO Object: Temperature"
  */
 
-#define LOG_MODULE_NAME net_ipso_temp_sensor
+#define LOG_MODULE_NAME src_ipso_temp_sensor
 #define LOG_LEVEL CONFIG_LWM2M_LOG_LEVEL
 
 #include <logging/log.h>
