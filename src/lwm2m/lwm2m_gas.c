@@ -75,7 +75,7 @@ int lwm2m_init_gas(void)
 	if (err)
 	{
 		LOG_ERR("I/O error");
-		return 1;
+		// return 1;
 	}
 
 	lwm2m_engine_create_obj_inst("3325/0");

@@ -49,9 +49,9 @@ int lwm2m_init_temp(void);
 int lwm2m_init_hum(void);
 #endif
 
+int lwm2m_init_gas(void);
 #if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
 /* Gas */
-int lwm2m_init_gas(void);
 #endif
 
 #if defined(CONFIG_LWM2M_IPSO_COLOUR_SENSOR)
