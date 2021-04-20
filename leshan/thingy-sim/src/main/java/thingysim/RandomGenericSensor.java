@@ -89,7 +89,7 @@ public class RandomGenericSensor extends BaseInstanceEnabler implements Destroya
 	}
 
 	private void adjustGeneric() {
-		float delta = (rng.nextInt(20) - 10) / 10f;
+		float delta = (rng.nextInt(50) - 25) / 10f;
 		currentGen += delta;
 		Integer changedResource = adjustMinMaxMeasuredValue(currentGen);
 		timestamp = new Date();

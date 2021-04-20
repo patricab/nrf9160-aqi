@@ -98,8 +98,11 @@ public class RandomPressureSensor extends BaseInstanceEnabler implements Destroy
 	}
 
 	private void adjustPressure() {
-		float delta = (rng.nextInt(50) - 1) / 10f;
+		float delta = (rng.nextInt(50) - 25) / 10f;
 		currentPressure += delta;
+		if (currentPressure < 0.0f) {
+			currentPressure -= delta;
+		}
 		Integer changedResource = adjustMinMaxMeasuredValue(currentPressure);
 		timestamp = new Date();
 		if (changedResource != null) {

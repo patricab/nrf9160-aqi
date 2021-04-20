@@ -102,8 +102,11 @@ public class RandomParticulateSensor extends BaseInstanceEnabler implements Dest
 	}
 
 	private void adjustParticulate() {
-		float delta = (rng.nextInt(50) - 1) / 10f;
+		float delta = (rng.nextInt(200) - 100) / 10f;
 		currentParticulate += delta;
+		if (currentParticulate < 0.0f || currentParticulate > 500.0f) {
+			currentParticulate -= delta;
+		}
 		Integer changedResource = adjustMinMaxMeasuredValue(currentParticulate);
 		timestamp = new Date();
 		if (changedResource != null) {

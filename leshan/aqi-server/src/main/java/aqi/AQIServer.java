@@ -106,7 +106,7 @@ public class AQIServer
 				//try {
 				//	ObserveResponse response = leshanServer.send(registration, new ObserveRequest(3300,0,5700));
 				//} catch (Exception e) {}
-				airqdb.setState(registration, true);
+				airqdb.setState(registration, 2);
 			}
 
 			public void updated(RegistrationUpdate update,
@@ -119,7 +119,7 @@ public class AQIServer
 				                      boolean expired, Registration newReg) {
 				System.out.println("device left: " + registration.getEndpoint() + observations);
 				timer.cancel();
-				airqdb.setState(registration, false);
+				airqdb.setState(registration, 0);
 			}
 		});
 
@@ -145,12 +145,12 @@ public class AQIServer
 
 		leshanServer.getPresenceService().addListener(new PresenceListener () {
 			public void onSleeping(Registration registration) {
-				airqdb.setState(registration, false);
+				airqdb.setState(registration, 1);
 				System.out.println("onSleeping " + registration);
 			}
 
 			public void onAwake(Registration registration) {
-				airqdb.setState(registration, true);
+				airqdb.setState(registration, 2);
 				System.out.println("onAwake " + registration);
 			}
 		});

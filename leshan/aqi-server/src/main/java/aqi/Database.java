@@ -49,17 +49,17 @@ public class Database {
 
 
 
-	public static void setState(Registration reg, boolean online) {
+	public static void setState(Registration reg, int status) {
 		Statement stmt = null;
 		Connection conn = null;
-		String ep = reg.getEndpoint();
+		String endpoint = reg.getEndpoint();
 		System.out.println("Connecting to database...");
 
-		String sql = "INSERT INTO devices(endpoint, online) " +
-		             "VALUES('" + ep + "', " + online + ") " +
+		String sql = "INSERT INTO devices(endpoint, status) " +
+		             "VALUES('" + endpoint + "', " + status + ") " +
 		             "ON CONFLICT (endpoint)" +
 		             "DO UPDATE SET " +
-		             "online = EXCLUDED.online," +
+		             "status = EXCLUDED.status," +
 		             "time = now();";
 		
 		System.out.println(sql);
@@ -102,7 +102,7 @@ public class Database {
 
 
 
-	public static void observation(ReadResponse response, String ep, 
+	public static void observation(ReadResponse response, String endpoint, 
 		LeshanServer server, Registration registration, int obj, int inst, int res)
 	{
 	/*	Observation observation = response.getObservation();
@@ -144,9 +144,9 @@ public class Database {
 		Statement stmt = null;
 		Connection conn = null;
 		System.out.println("Connecting to database...");
-			String sql = "INSERT INTO observation(timestamp, ep, object, instance, resource, value) " + 
-			             "VALUES(" + timestamp + ", '" + ep + "', " + obj + ", " + inst + ", " + res + ", " + val + ");";
-			System.out.println(sql);
+		String sql = "INSERT INTO observation(timestamp, endpoint, object, instance, resource, value) " + 
+		             "VALUES(" + timestamp + ", '" + endpoint + "', " + obj + ", " + inst + ", " + res + ", " + val + ");";
+		System.out.println(sql);
 		try
 		{
 			Class.forName("org.postgresql.Driver");
@@ -156,6 +156,69 @@ public class Database {
 			
 			stmt.executeUpdate(sql);
 			System.out.println("INSERT data successfully! " + timestamp);
+			stmt.close();//finally block used to close resources
+		
+		}
+		catch(SQLException se)
+		{
+			//Handle errors for JDBC
+			se.printStackTrace();
+		}
+		catch(Exception e)
+		{
+			//Handle errors for Class.forName
+			e.printStackTrace();
+		}
+	}
+
+	public static void log(String endpoint, String ip, String regId, String message)
+	{
+		Statement stmt = null;
+		Connection conn = null;
+		System.out.println("Connecting to database...");
+		String sql = "INSERT INTO log(endpoint, ip, regid, message) " + 
+		             "VALUES('" + endpoint + "', '" + ip + "', '" + regId + "', '" + message + "');";
+		System.out.println(sql);
+		try
+		{
+			Class.forName("org.postgresql.Driver");
+			conn = DriverManager.getConnection(DB_URL, user, pass);
+			System.out.println("INSERT log...");
+			stmt = conn.createStatement();
+			
+			stmt.executeUpdate(sql);
+			System.out.println("Logged successfully!");
+			stmt.close();//finally block used to close resources
+		
+		}
+		catch(SQLException se)
+		{
+			//Handle errors for JDBC
+			se.printStackTrace();
+		}
+		catch(Exception e)
+		{
+			//Handle errors for Class.forName
+			e.printStackTrace();
+		}
+	}
+
+	public static void logError(String endpoint, String ip, String regId, String error)
+	{
+		Statement stmt = null;
+		Connection conn = null;
+		System.out.println("Connecting to database...");
+		String sql = "INSERT INTO log(endpoint, ip, regid, error) " + 
+		             "VALUES('" + endpoint + "', '" + ip + "', '" + regId + "', '" + error + "');";
+		try
+		{
+			Class.forName("org.postgresql.Driver");
+			conn = DriverManager.getConnection(DB_URL, user, pass);
+			System.out.println("INSERT error into log...");
+			stmt = conn.createStatement();
+			
+			stmt.executeUpdate(sql);
+			System.out.println("Logged error successfully!");
 			stmt.close();//finally block used to close resources
 		
 		}

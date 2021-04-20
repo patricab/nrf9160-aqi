@@ -61,6 +61,7 @@ public class ReadTimerTask extends TimerTask {
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+			airqdb.logError(registration.getEndpoint(), registration.getAddress().toString(), registration.getId(), e.toString());
 		}
 	}
 

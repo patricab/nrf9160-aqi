@@ -606,19 +606,22 @@ public class AirQualityServer {
 				//try {
 				//  ObserveResponse response = lwServer.send(registration, new ObserveRequest(3300,0,5700));
 				//} catch (Exception e) {}
-				airqdb.setState(registration, true);
+				airqdb.setState(registration, 2);
+				airqdb.log(registration.getEndpoint(), registration.getAddress().toString(), registration.getId(), "Registered");
 			}
 
 			public void updated(RegistrationUpdate update,
 								Registration updatedReg, Registration previousReg) {
 				System.out.println("device is still here: " + updatedReg.getEndpoint());
-				//timer.schedule(new ReadTimerTask(lwServer, updatedReg), 1000);
+				timer.schedule(new ReadTimerTask(lwServer, updatedReg), 1000);
 			}
 
 			public void unregistered(Registration registration, Collection<Observation> observations,
 									  boolean expired, Registration newReg) {
 				System.out.println("device left: " + registration.getEndpoint() + observations);
+				airqdb.setState(registration, 0);
 				timer.cancel();
+				airqdb.log(registration.getEndpoint(), registration.getAddress().toString(), registration.getId(), "Deregistered");
 			}
 		});
 
@@ -644,13 +647,13 @@ public class AirQualityServer {
 
 		lwServer.getPresenceService().addListener(new PresenceListener () {
 			public void onSleeping(Registration registration) {
-				airqdb.setState(registration, false);
+				airqdb.setState(registration, 1);
 				System.out.println("onSleeping " + registration);
 				timer.cancel();
 			}
 
 			public void onAwake(Registration registration) {
-				airqdb.setState(registration, true);
+				airqdb.setState(registration, 2);
 				timer = new Timer();
 				timer.schedule(new ReadTimerTask(lwServer, registration), 2500);
 				System.out.println("onAwake " + registration);

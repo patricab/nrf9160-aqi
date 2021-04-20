@@ -89,8 +89,11 @@ public class RandomHumiditySensor extends BaseInstanceEnabler implements Destroy
 	}
 
 	private void adjustHumidity() {
-		float delta = (rng.nextInt(50) - 1) / 10f;
+		float delta = (rng.nextInt(20) - 10) / 10f;
 		currentHumidity += delta;
+		if (currentHumidity < 0.0f || currentHumidity > 100.0f) {
+			currentHumidity -= delta;
+		}
 		Integer changedResource = adjustMinMaxMeasuredValue(currentHumidity);
 		timestamp = new Date();
 		if (changedResource != null) {

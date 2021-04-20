@@ -37,7 +37,7 @@ public class RandomConcentrationSensor extends BaseInstanceEnabler implements De
 	private final ScheduledExecutorService scheduler;
 	private final Random rng = new Random();
 	private Date timestamp;
-	private float currentConcentration = 100f;
+	private float currentConcentration = 1f;
 	private float minMeasuredValue = currentConcentration;
 	private float maxMeasuredValue = currentConcentration;
 
@@ -89,8 +89,11 @@ public class RandomConcentrationSensor extends BaseInstanceEnabler implements De
 	}
 
 	private void adjustConcentration() {
-		float delta = (rng.nextInt(50) - 1) / 10f;
+		float delta = (rng.nextInt(50) - 25) / 1000f;
 		currentConcentration += delta;
+		if (currentConcentration < 0.0f || currentConcentration > 5.0f) {
+			currentConcentration -= delta;
+		}
 		Integer changedResource = adjustMinMaxMeasuredValue(currentConcentration);
 		timestamp = new Date();
 		if (changedResource != null) {
