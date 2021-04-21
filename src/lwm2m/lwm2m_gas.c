@@ -25,9 +25,10 @@ static int32_t timestamp;
 
 static int read_val(const struct device *temp_dev)
 {
-	int32_t val = 0;
+	int32_t val1 = 0;
+	int32_t val2 = 0;
 
-	int err = read_gas(&val);
+	int err = read_gas(&val1, &val2);
 	if (err)
 	{
 		LOG_ERR("Error: can't get data");
@@ -35,9 +36,10 @@ static int read_val(const struct device *temp_dev)
 	}
 
 	//standby_gas(); // Set sensor to low power mode
-	printk("val = %i\n", val);
+	printk("valf = %i.%i\n", val1, val2);
 	//float_val->val1 = *val;
-	gas_float.val1 = val;
+	gas_float.val1 = val1;
+	gas_float.val2 = val2;
 	return 0;
 }
 

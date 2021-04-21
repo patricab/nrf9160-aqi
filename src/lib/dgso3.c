@@ -50,7 +50,7 @@ static void uart_rx() {
 
    @retval 0 if successful, 1 if errors occured
 */
-int read_gas(int32_t *rx_val) {
+int read_gas(int32_t *rx_val1, int32_t *rx_val2) {
    printk("run read_gas\n");
    unsigned char recv_char = 0;
    unsigned char rx2_buf[128];
@@ -94,7 +94,10 @@ int read_gas(int32_t *rx_val) {
 
    // // Output rx buffer
    // sscanf(rx2_buf, "%d", rx_val);
-   *rx_val = get_token_float(rx2_buf, 1); //atoi(rx2_buf);
+   
+   float rx_val_f = get_token_float(rx2_buf, 1); //atoi(rx2_buf);
+   *rx_val1 = (int32_t) rx_val_f;
+   *rx_val2 = (int32_t) ((rx_val_f - *rx_val1) * 1e6);
    printk("rx2_buf: %s\n", rx2_buf);
    
    return 0;

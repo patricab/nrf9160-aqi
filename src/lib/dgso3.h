@@ -31,7 +31,7 @@ int init_uart(const struct device *die_dev);
 
    @retval 0 if successful, 1 if errors occured
 */
-int read_gas(int32_t *rx_val);
+int read_gas(int32_t *rx_val1, int32_t *rx_val2);
 
 /**
    @brief Set sensor to standby low power mode
