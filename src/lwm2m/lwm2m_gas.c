@@ -23,8 +23,7 @@ static const struct device *die_dev;
 
 static int32_t timestamp;
 
-static int read_val(const struct device *temp_dev,
-			    struct float32_value *float_val)
+static int read_val(const struct device *temp_dev)
 {
 	int32_t val = 0;
 
@@ -36,7 +35,7 @@ static int read_val(const struct device *temp_dev,
 	}
 
 	//standby_gas(); // Set sensor to low power mode
-
+	printk("val = %i\n", val);
 	//float_val->val1 = *val;
 	gas_float.val1 = val;
 	return 0;
@@ -55,9 +54,9 @@ static void *gas_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_ins
 	// 	*data_len = 0;
 	// 	return NULL;
 	// }
-	int ret = read_val(die_dev, &gas_float);
+	int ret = read_val(die_dev);
 
-	printk("read value returns %i\n", ret);
+	printk("read value returns %i\n", gas_float.val1);
 
 	lwm2m_engine_set_float32("3325/0/5700", &gas_float);
 	*data_len = sizeof(gas_float);

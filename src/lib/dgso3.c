@@ -83,7 +83,8 @@ int read_gas(int32_t *rx_val) {
    // }
 
    // // Output rx buffer
-   sscanf(rx_buf, "%d", rx_val);
+   // sscanf(rx2_buf, "%d", rx_val);
+   *rx_val = atoi(rx2_buf);
    printk("rx2_buf: %s\n", rx2_buf);
    return 0;
 }
