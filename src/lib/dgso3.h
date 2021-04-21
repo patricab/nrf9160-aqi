@@ -55,4 +55,6 @@ void zero_gas(void);
    @retval none
 */
 void set_gas(uint8_t val);
+
+float get_token_float(char *ibuf, int get_token);
 #endif

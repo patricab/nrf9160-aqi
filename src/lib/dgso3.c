@@ -53,7 +53,7 @@ static void uart_rx() {
 int read_gas(int32_t *rx_val) {
    printk("run read_gas\n");
    unsigned char recv_char = 0;
-   unsigned char rx2_buf[16];
+   unsigned char rx2_buf[128];
    uint8_t counter = 0;
    memset(rx2_buf, 0, sizeof(rx2_buf));
    //memset(rx_val, 96, sizeof(int32_t));
@@ -73,7 +73,7 @@ int read_gas(int32_t *rx_val) {
             return 1;
          }
       }
-      if (counter < 128) {
+      if (counter < sizeof(rx2_buf)) {
          rx2_buf[counter] = recv_char;
       } else {
          printk("counter %i\n", counter);
@@ -94,8 +94,9 @@ int read_gas(int32_t *rx_val) {
 
    // // Output rx buffer
    // sscanf(rx2_buf, "%d", rx_val);
-   *rx_val = atoi(rx2_buf);
+   *rx_val = get_token_float(rx2_buf, 1); //atoi(rx2_buf);
    printk("rx2_buf: %s\n", rx2_buf);
+   
    return 0;
 }
 
@@ -137,6 +138,32 @@ void set_gas(uint8_t val) {
    /* Send return character */
    // delay(K_MSEC(10));
    printk("\r");
+}
+
+float get_token_float(char *ibuf, int get_token) {
+   uint8_t token = 0;
+   uint8_t i =  0;
+   float ret = 0.0;
+   char return_buf[32];
+   memset(return_buf, 0, sizeof(return_buf));
+
+   while ((uint8_t) *ibuf != 0) {
+      if (*ibuf == ',') {
+         if (token == get_token) {
+            ret = strtof(return_buf, NULL);
+            printk("get token %i %s %f\n", token, return_buf, ret);
+            break;
+         }
+         token++;
+         i = 0;
+         memset(return_buf, 0, sizeof(return_buf));
+      } else {
+         return_buf[i] = *ibuf;
+         i++;
+      }
+      ibuf++;
+   }
+   return ret;
 }
 
 /**
