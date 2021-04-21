@@ -38,6 +38,7 @@ static void uart_rx() {
    uart_irq_rx_enable(dev);
    data_received = false;
    while (data_received == false) {
+      LOG_DBG("%i", data_received);
    }
    uart_irq_rx_disable(dev);
 }
@@ -50,19 +51,40 @@ static void uart_rx() {
    @retval 0 if successful, 1 if errors occured
 */
 int read_gas(int32_t *rx_val) {
-   /* Send command */
-   printk("\r");
+   printk("run read_gas\n");
+   unsigned char recv_char = 0;
+   unsigned char rx2_buf[16];
+   uint8_t counter = 0;
+   memset(rx2_buf, 0, sizeof(rx2_buf));
+   //memset(rx_val, 96, sizeof(int32_t));
 
-   /* Listen for data */
+   // Send command 
+   //printk("\r");
+   uart_poll_out(dev, 'h');
+   // Listen for data 
    // uart_rx(&delay_timer);
-   uart_rx();
-   if (!rx_buf[0]) { // Check for empty buffer
-      LOG_ERR("Error: device RX timed out");
-      return 1;
+   //uart_rx();
+
+   while (recv_char != '\n') {
+      while (uart_poll_in(dev, &recv_char) < 0) {}
+      if (counter < 16) {
+         rx2_buf[counter] = recv_char;
+      } else {
+         printk("counter %i\n", counter);
+         break;
+      }
+      counter++;
    }
+   rx2_buf[counter-1] = 0;
+
+   // if (!rx_buf[0]) { // Check for empty buffer
+   //    LOG_ERR("Error: device RX timed out");
+   //    return 1;
+   // }
 
    // // Output rx buffer
    sscanf(rx_buf, "%d", rx_val);
+   printk("rx2_buf: %s\n", rx2_buf);
    return 0;
 }
 
@@ -122,6 +144,8 @@ int init_uart(const struct device *die_dev) {
    enum uart_config_flow_control flow = UART_CFG_FLOW_CTRL_NONE;
    const struct uart_config conf = {baud, parity, stop, data, flow};
    dev = die_dev;
+
+   LOG_DBG("uart init 9600");
 
    /* Config function calls */
    int err = uart_configure(dev, &conf);

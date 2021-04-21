@@ -26,7 +26,6 @@ zephyr_library_include_directories(
   src/ui
   src/sensor/bh1749
   src/sensor/dgso3
-  src/sensor/ipso
   src/sensor/sensor_sim
   src/sensor/sps30
   src/lib
