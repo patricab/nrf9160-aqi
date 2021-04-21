@@ -1,3 +1,5 @@
+zephyr_include_directories(include)
+
 target_sources_ifdef(CONFIG_LWM2M_IPSO_TEMP_SENSOR
 	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ipso_temp_sensor.c
 	)
