@@ -21,9 +21,12 @@ static void uart_cb(const struct device *dev, void *data) {
 		uart_fifo_read(dev, rx_buf, sizeof(rx_buf));
 
       // End RX at at EOT (newline)
-		if (*rx_buf == '\n') {
-			data_received = true;
-		}
+      for (int i = 0; i < sizeof(r_buf); i++) {
+         if (rx_buf[i] == '\n') {
+            data_received = true;
+            break;
+         }
+      }
   }
 }
 
