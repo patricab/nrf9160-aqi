@@ -60,20 +60,30 @@ int read_gas(int32_t *rx_val) {
 
    // Send command 
    //printk("\r");
-   uart_poll_out(dev, 'h');
+   uart_poll_out(dev, '\r');
    // Listen for data 
    // uart_rx(&delay_timer);
    //uart_rx();
 
+   uint32_t start = k_uptime_get_32();
    while (recv_char != '\n') {
-      while (uart_poll_in(dev, &recv_char) < 0) {}
-      if (counter < 16) {
+      while (uart_poll_in(dev, &recv_char) < 0) {
+         if ((k_uptime_get_32() - start) > 2000) {
+            printk("Timeout reading from gas sensor (2)\n");
+            return 1;
+         }
+      }
+      if (counter < 128) {
          rx2_buf[counter] = recv_char;
       } else {
          printk("counter %i\n", counter);
          break;
       }
       counter++;
+      if ((k_uptime_get_32() -start) > 2000) {
+         printk("Timeout reading from gas sensor (2)\n");
+         return 1;
+      }
    }
    rx2_buf[counter-1] = 0;
 
