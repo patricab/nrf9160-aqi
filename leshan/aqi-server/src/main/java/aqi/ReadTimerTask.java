@@ -65,13 +65,29 @@ public class ReadTimerTask extends TimerTask {
 		}
 	}
 
+	// public void setDate() {
+	// 	try {
+	// 		ReadResponse response = server.send(registration, new WriteRequest(3, 0, 13, new Date.now()));
+	// 		if (response.isSuccess()) {
+	// 			System.out.println("Value:" + response.getContent().toString());
+	// 			airqdb.observation(response, registration.getEndpoint(), server,
+	// 			                   registration, 3, 0, 13);
+	// 		}else {
+	// 			System.out.println("Failed to read:" + response.getCode() + " " + response.getErrorMessage());
+	// 		}
+	// 	} catch (InterruptedException e) {
+	// 		e.printStackTrace();
+	// 		airqdb.logError(registration.getEndpoint(), registration.getAddress().toString(), registration.getId(), e.toString());
+	// 	}
+	// }
+
 	@Override
 	public void run() {
 		//sendReq(3,0,13);
-		sendReq(3300, 0, 5700); // Gas sensor
-		sendReq(3303, 0, 5700); // Temperature sensor
-		sendReq(3304, 0, 5700); // Humidity sensor
-		sendReq(3325, 0, 5700); // Concentration sensor
+		sendReq( 3300, 0, 5700); // Gas sensor
+		sendReq( 3303, 0, 5700); // Temperature sensor
+		sendReq( 3304, 0, 5700); // Humidity sensor
+		sendReq( 3325, 0, 5700); // Concentration sensor
 		sendReq(10314, 0, 5700); // Particulate sensor 2.5PM
 		sendReq(10314, 1, 5700); // Particulate sensor 10PM
 		sendReq(10314, 2, 5700); // Particulate sensor Typisk PM

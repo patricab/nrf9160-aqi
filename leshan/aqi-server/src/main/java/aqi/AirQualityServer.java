@@ -27,7 +27,9 @@ import java.net.URI;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.text.SimpleDateFormat;
 import java.util.*;
+
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
@@ -608,6 +610,14 @@ public class AirQualityServer {
 				//} catch (Exception e) {}
 				airqdb.setState(registration, 2);
 				airqdb.log(registration.getEndpoint(), registration.getAddress().toString(), registration.getId(), "Registered");
+				SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'");
+				Date date = new Date(System.currentTimeMillis());
+				try {
+					lwServer.send(registration, new WriteRequest(3, 0, 13, date));
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					airqdb.logError(registration.getEndpoint(), registration.getAddress().toString(), registration.getId(), e.toString());
+				}
 			}
 
 			public void updated(RegistrationUpdate update,
