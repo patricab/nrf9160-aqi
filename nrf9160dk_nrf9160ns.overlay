@@ -6,11 +6,11 @@
 
 
 &i2c3 {
-        status = "okay";
+	status = "okay";
 	compatible = "nordic,nrf-twim";
 	sda-pin = <30>;
 	scl-pin = <31>;
-        clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &spi3 {
@@ -20,6 +20,6 @@
 &uart1 {
 	status = "okay";
 	current-speed = <9600>;
-	tx-pin = <1>;
-	rx-pin = <0>;
+	tx-pin = <0>;
+	rx-pin = <1>;
 };

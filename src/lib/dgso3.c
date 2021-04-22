@@ -1,46 +1,36 @@
 #include "dgso3.h"
 
 /* Variables */
-static uint8_t *rx_buf = {NULL};
+static unsigned char rx_buf[30] = {0};
 static const struct device *dev;
 static volatile bool data_received;
 
-/* Function declarations */
-// static void uart_rx(struct k_timer *delay_timer);
-
 /* Inital configuration */
-// K_TIMER_DEFINE(delay_timer, uart_rx, NULL);
 LOG_MODULE_REGISTER(app_uart, CONFIG_APP_LOG_LEVEL);
 
-
 /* UART recieve (RX) callback */
-static void uart_cb(const struct device *dev, void *data) {
-   // Check if UART RX interrupt is ready
- 	if (uart_irq_rx_ready(dev)) {
-      // Read from FIFO queue
-		uart_fifo_read(dev, rx_buf, sizeof(rx_buf));
+// static void uart_cb(const struct device *dev, void *data) {
+//    // Check if UART RX interrupt is ready
+//  	if (uart_irq_rx_ready(dev)) {
+//       // Read from FIFO queue
+// 		uart_fifo_read(dev, rx_buf, sizeof(rx_buf));
 
-      // End RX at at EOT (newline)
-		if (*rx_buf == '\n') {
-			data_received = true;
-		}
-  }
-}
-
-/* Delay function */
-// static void delay(k_timeout_t t) {
-//    k_timer_start(&delay_timer, t, K_NO_WAIT);
-// }
+//       // End RX at at EOT (newline)
+// 		if (*rx_buf == '\n') {
+// 			data_received = true;
+// 		}
+//   } // }
 
 /* UART recieve (RX) */
 // static void uart_rx(struct k_timer *timer) {
-static void uart_rx() {
-   uart_irq_rx_enable(dev);
-   data_received = false;
-   while (data_received == false) {
-   }
-   uart_irq_rx_disable(dev);
-}
+// static void uart_rx() {
+//    uart_irq_rx_enable(dev);
+//    data_received = false;
+//    while (data_received == false) {
+//       LOG_DBG("%i", data_received);
+//    }
+//    uart_irq_rx_disable(dev);
+// }
 
 /**
    @brief Read sensor gas measurement (single measurement)
@@ -49,20 +39,53 @@ static void uart_rx() {
 
    @retval 0 if successful, 1 if errors occured
 */
-int read_gas(int32_t *rx_val) {
-   /* Send command */
-   printk("\r");
+int read_gas(int32_t rx_val) {
+   unsigned char val_buf[15] = {0};
+   unsigned char recv_char = 0;
+   int counter = 0;
 
-   /* Listen for data */
-   // uart_rx(&delay_timer);
-   uart_rx();
-   if (!rx_buf[0]) { // Check for empty buffer
-      LOG_ERR("Error: device RX timed out");
-      return 1;
+   // Send command 
+   // uart_poll_out(dev, '\r');
+   printk("\n");
+
+   // Listen for data 
+   while (1) { // Run until newline 
+      while (uart_poll_in(dev, &recv_char) < 0) { // Wait until character is available
+      }
+      rx_buf[counter] = recv_char;
+      
+      if (recv_char == '\n') {
+         break;
+      }
+      // if (counter < sizeof(rx_buf)) { // Check if buffer is full
+      //    rx_buf[counter] = recv_char;
+      //    uart_poll_in(dev, &recv_char);
+      //    counter++;
+      // } else {
+      //    break;
+      // }
    }
 
-   // // Output rx buffer
-   sscanf(rx_buf, "%d", rx_val);
+   // Get PPB values at second comma value
+   // for (int i = 0; i < sizeof(rx_buf); i++) {
+   //    if (rx_buf[i] == ',') {
+   //       int k = 0;
+   //       i += 2; // Skip space after comma
+   //       while (rx_buf[i] != ',') {
+   //          val_buf[k] = rx_buf[i];
+   //          i++; // Increment index for output buffer and rx buffer
+   //          k++;
+   //       }
+   //       break;
+   //    }
+   // }
+   
+   // Output modified rx buffer
+   // sscanf(val_buf, "%d", &rx_val);
+   rx_val = (int32_t)recv_char;
+   // rx_val = rx_buf[0];
+   // printk("\n %d \n", rx_val);
+   
    return 0;
 }
 
@@ -73,7 +96,8 @@ int read_gas(int32_t *rx_val) {
 */
 void standby_gas(void) {
    /* Send command */
-   printk("s");
+   // printk("s");
+   uart_poll_out(dev, 's');
 }
 
 /**
@@ -83,7 +107,7 @@ void standby_gas(void) {
 */
 void zero_gas(void) {
    /* Send command */
-   printk("Z");
+   uart_poll_out(dev, 'Z');
 }
 
 /**
@@ -95,7 +119,7 @@ void zero_gas(void) {
  */
 void set_gas(uint8_t val) {
    /* Send command */
-   printk("S");
+   uart_poll_out(dev, 'S');
 
    /* Send value */
    // delay(K_MSEC(10));
@@ -103,8 +127,34 @@ void set_gas(uint8_t val) {
 
    /* Send return character */
    // delay(K_MSEC(10));
-   printk("\r");
+   uart_poll_out(dev, '\r');
 }
+
+// float get_token_float(char *ibuf, int get_token) {
+//    uint8_t token = 0;
+//    uint8_t i =  0;
+//    float ret = 0.0;
+//    char return_buf[32];
+//    memset(return_buf, 0, sizeof(return_buf));
+
+//    while ((uint8_t) *ibuf != 0) {
+//       if (*ibuf == ',') {
+//          if (token == get_token) {
+//             ret = strtof(return_buf, NULL);
+//             printk("get token %i %s %f\n", token, return_buf, ret);
+//             break;
+//          }
+//          token++;
+//          i = 0;
+//          memset(return_buf, 0, sizeof(return_buf));
+//       } else {
+//          return_buf[i] = *ibuf;
+//          i++;
+//       }
+//       ibuf++;
+//    }
+//    return ret;
+// }
 
 /**
    @brief Initialize UART device
@@ -115,12 +165,13 @@ void set_gas(uint8_t val) {
 */
 int init_uart(const struct device *die_dev) {
    /* Definitions */
-   uint32_t baud = 9600;
-   enum uart_config_parity parity = UART_CFG_PARITY_NONE;
-   enum uart_config_stop_bits stop = UART_CFG_STOP_BITS_1;
-   enum uart_config_data_bits data = UART_CFG_DATA_BITS_8;
-   enum uart_config_flow_control flow = UART_CFG_FLOW_CTRL_NONE;
-   const struct uart_config conf = {baud, parity, stop, data, flow};
+   struct uart_config conf = {
+		.baudrate = 9600,
+		.parity = UART_CFG_PARITY_NONE,
+		.stop_bits = UART_CFG_STOP_BITS_1,
+		.data_bits = UART_CFG_DATA_BITS_8,
+		.flow_ctrl = UART_CFG_FLOW_CTRL_NONE
+	};
    dev = die_dev;
 
    /* Config function calls */
@@ -131,6 +182,6 @@ int init_uart(const struct device *die_dev) {
    }
 
    /* Configure UART callback */
-   uart_irq_callback_set(dev, uart_cb);
+   // uart_irq_callback_set(dev, uart_cb);
    return 0;
 }
