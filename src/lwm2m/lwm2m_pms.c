@@ -8,9 +8,9 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(app_lwm2m_pms, CONFIG_APP_LOG_LEVEL);
 
-static const struct device *die_dev = 100;
-static struct float32_value pms_float[3] = {{123, 0}, {321, 0}, {231, 0}};
-struct sps30_data sps30 = {33.3, 22.2, 11.1};
+static const struct device *die_dev;
+static struct float32_value pms_float[3];// = {{123, 0}, {321, 0}, {231, 0}};
+struct sps30_data sps30;// = {33.3, 22.2, 11.1};
 
 static int32_t timestamp = 100;
 

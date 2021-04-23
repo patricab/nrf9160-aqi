@@ -4,7 +4,7 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(sps30, CONFIG_APP_LOG_LEVEL);
 
-const struct device *dev = 100;
+const struct device *dev;
 extern struct sps30_data sps30;
 
 static uint8_t check(uint8_t data[2])
