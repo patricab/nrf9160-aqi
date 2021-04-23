@@ -45,6 +45,6 @@ target_sources_ifdef(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR
 target_sources_ifdef(CONFIG_LWM2M_IPSO_COLOUR_SENSOR
 	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_colour.c
 	)
-target_sources_ifdef(CONFIG_LWM2M_PMS
-	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_pms.c
-	)
+# target_sources_ifdef(CONFIG_LWM2M_PMS
+# 	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_pms.c
+# 	)

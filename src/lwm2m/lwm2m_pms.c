@@ -92,7 +92,7 @@ static void *pms2_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_in
 // lwm2m init function
 int lwm2m_init_pms(void)
 {
-   	die_dev = device_get_binding(DT_LABEL(DT_NODELABEL(i2c2)));
+   	die_dev = device_get_binding(DT_LABEL(DT_NODELABEL(i2c3)));
 	if (!die_dev) {
 		LOG_ERR("No data device found.");
 	}
