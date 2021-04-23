@@ -174,10 +174,6 @@ SELECT time,
 	age(DATE_TRUNC('second', now()), DATE_TRUNC('second', time)),
 	endpoint,
 	description,
-	CASE status
-		WHEN 0 THEN 'offline'
-		WHEN 1 THEN 'sleep'
-		WHEN 2 THEN 'online'
-	END status
+	status
 FROM devices
 order by time desc;

@@ -49,12 +49,14 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.leshan.core.LwM2m;
 import org.eclipse.leshan.core.model.ObjectLoader;
 import org.eclipse.leshan.core.model.ObjectModel;
+//import org.eclipse.leshan.core.model.ResourceModel.Type;
 import org.eclipse.leshan.core.node.codec.DefaultLwM2mNodeDecoder;
 import org.eclipse.leshan.core.node.codec.DefaultLwM2mNodeEncoder;
 import org.eclipse.leshan.core.node.codec.LwM2mNodeDecoder;
 import org.eclipse.leshan.core.util.SecurityUtil;
 import org.eclipse.leshan.core.observation.*;
 import org.eclipse.leshan.core.request.*;
+import org.eclipse.leshan.core.request.WriteRequest.Mode;
 import org.eclipse.leshan.core.response.*;
 import org.eclipse.leshan.core.node.*;
 import org.eclipse.leshan.server.registration.*;
@@ -68,6 +70,7 @@ import org.eclipse.leshan.server.redis.RedisRegistrationStore;
 import org.eclipse.leshan.server.redis.RedisSecurityStore;
 import org.eclipse.leshan.server.security.EditableSecurityStore;
 import org.eclipse.leshan.server.security.FileSecurityStore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -602,18 +605,16 @@ public class AirQualityServer {
 			public void registered(Registration registration, Registration previousReg,
 									Collection<Observation> previousObsersations) {
 				System.out.println("new device: " + registration);
-				//timer = new Timer();
-				//timer.schedule(new ReadTimerTask(lwServer, registration), 1, 3000);
-				//timer.schedule(new ReadTimerTask(lwServer, registration), 2500);
-				//try {
-				//  ObserveResponse response = lwServer.send(registration, new ObserveRequest(3300,0,5700));
-				//} catch (Exception e) {}
+				timer = new Timer();
+				timer.schedule(new ReadTimerTask(lwServer, registration), 2000);
 				airqdb.setState(registration, 2);
 				airqdb.log(registration.getEndpoint(), registration.getAddress().toString(), registration.getId(), "Registered");
-				SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'");
 				Date date = new Date(System.currentTimeMillis());
+				LwM2mResource timestamp  = LwM2mSingleResource.newDateResource(13, date);
+				LwM2mResource offset   = LwM2mSingleResource.newStringResource(14, "+00:00");
+				LwM2mResource timezone = LwM2mSingleResource.newStringResource(15, "UTC");
 				try {
-					lwServer.send(registration, new WriteRequest(3, 0, 13, date));
+					lwServer.send(registration, new WriteRequest(Mode.UPDATE, 3, 0, timestamp, offset, timezone));
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					airqdb.logError(registration.getEndpoint(), registration.getAddress().toString(), registration.getId(), e.toString());
