@@ -4,8 +4,8 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(sps30, CONFIG_APP_LOG_LEVEL);
 
-const struct device *dev;
-extern struct sps30_data sps30;
+const struct device *dev = 100;
+//extern struct sps30_data sps30 = {33.3, 22.2, 11.1};
 
 static uint8_t check(uint8_t data[2])
 {
@@ -170,8 +170,8 @@ int sps30_particle_read(const struct device *dev)
 		return ret;
 	}
 
-	sps30.nc_2p5 = (rx_buf[36] << 24) | (rx_buf[37] << 16) | (rx_buf[39] << 8) | rx_buf[40];
-	sps30.nc_10p0 = (rx_buf[48] << 24) | (rx_buf[49] << 16) | (rx_buf[51] << 8) | rx_buf[52];
+	sps30.nc_2p5   = (rx_buf[36] << 24) | (rx_buf[37] << 16) | (rx_buf[39] << 8) | rx_buf[40];
+	sps30.nc_10p0  = (rx_buf[48] << 24) | (rx_buf[49] << 16) | (rx_buf[51] << 8) | rx_buf[52];
 	sps30.typ_size = (rx_buf[54] << 24) | (rx_buf[55] << 16) | (rx_buf[57] << 8) | rx_buf[58];
 
 	#if defined(CONFIG_LOG)
@@ -216,7 +216,7 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 	
 	// nRF I2C master configuration
 	uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_MASTER;
-	uint8_t id[6];
+	//uint8_t id[6];
 
 	if (i2c_configure(dev, i2c_cfg))
 	{

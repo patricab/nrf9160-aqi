@@ -31,5 +31,4 @@ zephyr_library_include_directories(
 add_subdirectory(src/lwm2m)
 add_subdirectory(src/ui)
 add_subdirectory(src/lib)
-  
 add_subdirectory(src/sensor/ipso)
