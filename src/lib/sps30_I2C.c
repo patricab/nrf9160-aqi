@@ -5,7 +5,7 @@
 LOG_MODULE_REGISTER(sps30, CONFIG_APP_LOG_LEVEL);
 
 const struct device *dev = 100;
-//extern struct sps30_data sps30 = {33.3, 22.2, 11.1};
+extern struct sps30_data sps30;
 
 static uint8_t check(uint8_t data[2])
 {
