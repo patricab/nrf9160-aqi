@@ -12,7 +12,7 @@ static const struct device *die_dev;
 static struct float32_value pms_float[3];// = {{123, 0}, {321, 0}, {231, 0}};
 struct sps30_data sps30;// = {33.3, 22.2, 11.1};
 
-static int32_t timestamp = 100;
+//static int32_t timestamp = 0;
 
 //Convert float to float32 structure values
 static void float_struct(double num, struct float32_value *strct) {
@@ -116,12 +116,12 @@ int lwm2m_init_pms(void)
 	lwm2m_engine_register_read_callback("10314/0/5700", pms0_read_cb);
 	lwm2m_engine_register_read_callback("10314/1/5700", pms1_read_cb);
 	lwm2m_engine_register_read_callback("10314/2/5700", pms2_read_cb);
-	lwm2m_engine_set_res_data("10314/0/5518",
-				  &timestamp, sizeof(timestamp), 0);
-	lwm2m_engine_set_res_data("10314/1/5518",
-				  &timestamp, sizeof(timestamp), 0);
-	lwm2m_engine_set_res_data("10314/2/5518",
-				  &timestamp, sizeof(timestamp), 0);
+	// lwm2m_engine_set_res_data("10314/0/5518",
+	// 			  &timestamp, sizeof(timestamp), 0);
+	// lwm2m_engine_set_res_data("10314/1/5518",
+	// 			  &timestamp, sizeof(timestamp), 0);
+	// lwm2m_engine_set_res_data("10314/2/5518",
+	// 			  &timestamp, sizeof(timestamp), 0);
 	return 0;
 }
 
