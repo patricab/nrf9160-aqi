@@ -88,13 +88,6 @@ static int sps30_set_pointer_write(const struct device *dev, uint16_t ptr, uint8
 	return 0;
 }
 
-static int * dec(float num) {
-    static int r[2];
-    r[0] = (int)num;
-    r[1] = num - r[0];
-
-    return r;
-}
 
 /**
 	@brief Read particle measurment
@@ -172,9 +165,9 @@ int sps30_particle_read(const struct device *dev)
 	sps30.nc_10p0 = (rx_buf[48] << 24) | (rx_buf[49] << 16) | (rx_buf[51] << 8) | rx_buf[52];
 	sps30.typ_size = (rx_buf[54] << 24) | (rx_buf[55] << 16) | (rx_buf[57] << 8) | rx_buf[58];
 
-	int *r = dec(sps30.nc_2p5);
 	#if defined(CONFIG_LOG)
-    printk("\nnc_2p5 = %d %d\n", r[0], r[1]);
+	// int *r = dec(sps30.nc_2p5);
+    // printk("\nnc_2p5 = %d %d\n", r[0], r[1]);
 	#endif
 
 	// Stop measurment

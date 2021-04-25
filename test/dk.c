@@ -10,15 +10,6 @@ LOG_MODULE_REGISTER(dk, CONFIG_APP_LOG_LEVEL);
 static const struct device *die_dev;
 struct sps30_data sps30;
 
-static int *dec(double num) {
-    // Based on https://www.techonthenet.com/c_language/standard_library_functions/math_h/modf.php
-    static int r[2];
-    double frac;
-
-    r[0] = modf(num, &frac);
-    r[1] = frac;
-    return r;
-}
 
 static void btn_cb(uint32_t button_states, uint32_t has_changed)
 {
@@ -34,7 +25,6 @@ static void btn_cb(uint32_t button_states, uint32_t has_changed)
     {
         // printk("\nBtn2\n");
      
-     
         int err = sps30_particle_read(die_dev);
         if (err)
         {
@@ -42,12 +32,9 @@ static void btn_cb(uint32_t button_states, uint32_t has_changed)
 
         }
         k_sleep(K_MSEC(1000));
-        int *r = dec(sps30.nc_2p5);
-        printk("\nnc_2p5 = %d %d\n", r[0], r[1]);
-        r = dec(sps30.nc_10p0);
-        printk("\nnc_10 = %d %d\n", r[0], r[1]);
-        r = dec(sps30.typ_size);
-        printk("\ntyp_size = %d %d\n", r[0], r[1]);
+        printk("\nnc_2p5: %u\n", sps30.nc_2p5);
+        printk("\nnc_10p0: %u\n", sps30.nc_10p0);
+        printk("\ntyp_size: %u\n", sps30.typ_size);
     }
     // else if (has_changed & button_states & DK_BTN3_MSK)
     // {
