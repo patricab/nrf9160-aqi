@@ -18,7 +18,7 @@ void loop()
   // Check if serial is available
   if (Serial.available() > 0)
   {
-    Serial.print('s');
+    Serial.write('s');
     delay(10);
     // rx = Serial.read();
 

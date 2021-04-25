@@ -122,6 +122,7 @@ int init_uart(const struct device *die_dev) {
    // enum uart_config_data_bits data = UART_CFG_DATA_BITS_8;
    // enum uart_config_flow_control flow = UART_CFG_FLOW_CTRL_NONE;
    // const struct uart_config conf = {baud, parity, stop, data, flow};
+   dev = die_dev;
    const struct uart_config conf = {
 		.baudrate = 9600,
 		.parity = UART_CFG_PARITY_NONE,
@@ -129,11 +130,10 @@ int init_uart(const struct device *die_dev) {
 		.data_bits = UART_CFG_DATA_BITS_8,
 		.flow_ctrl = UART_CFG_FLOW_CTRL_NONE
 	};
-   dev = die_dev;
 
    /* Config function calls */
    int err = uart_configure(dev, &conf);
-   if (err != 0) {
+   if (err == -ENOTSUP) {
       LOG_ERR("Error: could not configure UART device");
       return 1;
    }
