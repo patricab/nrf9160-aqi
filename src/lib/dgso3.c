@@ -135,6 +135,6 @@ int init_uart(const struct device *die_dev) {
    }
 
    /* Configure UART callback */
-   uart_irq_callback_set(dev, uart_cb);
+   // uart_irq_callback_set(dev, uart_cb);
    return 0;
 }

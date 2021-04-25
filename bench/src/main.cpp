@@ -18,30 +18,32 @@ void loop()
   // Check if serial is available
   if (Serial.available() > 0)
   {
-    rx = Serial.read();
+    Serial.print('s');
+    delay(10);
+    // rx = Serial.read();
 
-    switch (rx)
-    {
-    case '\r': // 0x0D - Single measurment
-      str = "1112\n";
-      Serial.write(str);
-      digitalWrite(9, HIGH);
-      break;
-    case 's': // Standby low power mode
-      str = "Standby\n";
-      Serial.write(str);
-      digitalWrite(7, HIGH);
-      break;
-    case 'Z': // Zero user calibration
-      str = "Setting zero...done\n";
-      Serial.write(str);
-      digitalWrite(3, HIGH);
-      break;
-    case 'c':
-      digitalWrite(3, LOW);
-      digitalWrite(7, LOW);
-      digitalWrite(9, LOW);
-      break;
-    }
+    // switch (rx)
+    // {
+    //   case '\r': // 0x0D - Single measurment
+    //     // str = "1112\n";
+    //     // Serial.write(str);
+    //     digitalWrite(9, HIGH);
+    //     break;
+    // case 's': // Standby low power mode
+    //   str = "Standby\n";
+    //   Serial.write(str);
+    //   digitalWrite(7, HIGH);
+    //   break;
+    // case 'Z': // Zero user calibration
+    //   str = "Setting zero...done\n";
+    //   Serial.write(str);
+    //   digitalWrite(3, HIGH);
+    //   break;
+    // case 'c':
+    //   digitalWrite(3, LOW);
+    //   digitalWrite(7, LOW);
+    //   digitalWrite(9, LOW);
+    //   break;
+    // }
   }
 }

@@ -1,7 +1,7 @@
 #include "dgso3.h"
 
 /* Variables */
-static uint8_t *rx_buf = {NULL};
+static uint8_t *rx_buf;
 static const struct device *dev;
 static volatile bool data_received;
 
@@ -14,18 +14,18 @@ LOG_MODULE_REGISTER(app_uart, CONFIG_APP_LOG_LEVEL);
 
 
 /* UART recieve (RX) callback */
-static void uart_cb(const struct device *dev, void *data) {
-   // Check if UART RX interrupt is ready
- 	if (uart_irq_rx_ready(dev)) {
-      // Read from FIFO queue
-		uart_fifo_read(dev, rx_buf, sizeof(rx_buf));
+// static void uart_cb(const struct device *dev, void *data) {
+//    // Check if UART RX interrupt is ready
+//  	if (uart_irq_rx_ready(dev)) {
+//       // Read from FIFO queue
+// 		uart_fifo_read(dev, rx_buf, sizeof(rx_buf));
 
-      // End RX at at EOT (newline)
-		if (*rx_buf == '\n') {
-			data_received = true;
-		}
-  }
-}
+//       // End RX at at EOT (newline)
+// 		if (*rx_buf == '\n') {
+// 			data_received = true;
+// 		}
+//   }
+// }
 
 /* Delay function */
 // static void delay(k_timeout_t t) {
@@ -34,13 +34,13 @@ static void uart_cb(const struct device *dev, void *data) {
 
 /* UART recieve (RX) */
 // static void uart_rx(struct k_timer *timer) {
-static void uart_rx() {
-   uart_irq_rx_enable(dev);
-   data_received = false;
-   while (data_received == false) {
-   }
-   uart_irq_rx_disable(dev);
-}
+// static void uart_rx() {
+//    uart_irq_rx_enable(dev);
+//    data_received = false;
+//    while (data_received == false) {
+//    }
+//    uart_irq_rx_disable(dev);
+// }
 
 /**
    @brief Read sensor gas measurement (single measurement)
@@ -55,7 +55,7 @@ int read_gas(int16_t *rx_val) {
 
    /* Listen for data */
    // uart_rx(&delay_timer);
-   uart_rx();
+   // uart_rx();
    if (!rx_buf[0]) { // Check for empty buffer
       LOG_ERR("Error: device RX timed out");
       return 1;
@@ -116,12 +116,19 @@ void set_gas(uint8_t val) {
 */
 int init_uart(const struct device *die_dev) {
    /* Definitions */
-   uint32_t baud = 9600;
-   enum uart_config_parity parity = UART_CFG_PARITY_NONE;
-   enum uart_config_stop_bits stop = UART_CFG_STOP_BITS_1;
-   enum uart_config_data_bits data = UART_CFG_DATA_BITS_8;
-   enum uart_config_flow_control flow = UART_CFG_FLOW_CTRL_NONE;
-   const struct uart_config conf = {baud, parity, stop, data, flow};
+   // uint32_t baud = 9600;
+   // enum uart_config_parity parity = UART_CFG_PARITY_NONE;
+   // enum uart_config_stop_bits stop = UART_CFG_STOP_BITS_1;
+   // enum uart_config_data_bits data = UART_CFG_DATA_BITS_8;
+   // enum uart_config_flow_control flow = UART_CFG_FLOW_CTRL_NONE;
+   // const struct uart_config conf = {baud, parity, stop, data, flow};
+   const struct uart_config conf = {
+		.baudrate = 9600,
+		.parity = UART_CFG_PARITY_NONE,
+		.stop_bits = UART_CFG_STOP_BITS_1,
+		.data_bits = UART_CFG_DATA_BITS_8,
+		.flow_ctrl = UART_CFG_FLOW_CTRL_NONE
+	};
    dev = die_dev;
 
    /* Config function calls */
@@ -132,6 +139,6 @@ int init_uart(const struct device *die_dev) {
    }
 
    /* Configure UART callback */
-   uart_irq_callback_set(dev, uart_cb);
+   // uart_irq_callback_set(dev, uart_cb);
    return 0;
 }
