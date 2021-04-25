@@ -152,7 +152,7 @@ static int lwm2m_setup(void)
 #if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
 	lwm2m_init_conc();
 #endif
-#if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
+#if defined(CONFIG_LWM2M_IPSO_GENERIC_SENSOR)
 	lwm2m_init_pms();
 #endif
 #if defined(CONFIG_UI_BUZZER)
