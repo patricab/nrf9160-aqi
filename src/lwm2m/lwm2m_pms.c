@@ -40,12 +40,12 @@ static void *pms0_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_in
 	int32_t ts;
 
 	read_pms(die_dev);
-	lwm2m_engine_set_float32("3300/0/5700", &pms_float[0]);
+	lwm2m_engine_set_float32("3300/2/5700", &pms_float[0]);
 	*data_len = sizeof(pms_float[0]);
 	/* get current time from device */
 	lwm2m_engine_get_s32("3/0/13", &ts);
 	/* set timestamp */
-	lwm2m_engine_set_s32("3300/0/5518", ts);
+	lwm2m_engine_set_s32("3300/2/5518", ts);
 
 	return &pms_float[0];
 }
@@ -56,12 +56,12 @@ static void *pms1_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_in
 	int32_t ts;
 
 	read_pms(die_dev);
-	lwm2m_engine_set_float32("3300/1/5700", &pms_float[1]);
+	lwm2m_engine_set_float32("3300/3/5700", &pms_float[1]);
 	*data_len = sizeof(pms_float[1]);
 	/* get current time from device */
 	lwm2m_engine_get_s32("3/0/13", &ts);
 	/* set timestamp */
-	lwm2m_engine_set_s32("3300/1/5518", ts);
+	lwm2m_engine_set_s32("3300/3/5518", ts);
 
 	return &pms_float[1];
 }
@@ -72,12 +72,12 @@ static void *pms2_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_in
 	int32_t ts;
 
 	read_pms(die_dev);
-	lwm2m_engine_set_float32("3300/2/5700", &pms_float[2]);
+	lwm2m_engine_set_float32("3300/4/5700", &pms_float[2]);
 	*data_len = sizeof(pms_float[2]);
 	/* get current time from device */
 	lwm2m_engine_get_s32("3/0/13", &ts);
 	/* set timestamp */
-	lwm2m_engine_set_s32("3300/2/5518", ts);
+	lwm2m_engine_set_s32("3300/4/5518", ts);
 
 	return &pms_float[2];
 }
@@ -99,18 +99,18 @@ int lwm2m_init_pms(void)
 		return 1;
 	}
 
-	lwm2m_engine_create_obj_inst("3300/0");
-	lwm2m_engine_create_obj_inst("3300/1");
 	lwm2m_engine_create_obj_inst("3300/2");
+	lwm2m_engine_create_obj_inst("3300/3");
+	lwm2m_engine_create_obj_inst("3300/4");
 
-	lwm2m_engine_register_read_callback("3300/0/5700", pms0_read_cb);
-	lwm2m_engine_register_read_callback("3300/1/5700", pms1_read_cb);
-	lwm2m_engine_register_read_callback("3300/2/5700", pms2_read_cb);
-	lwm2m_engine_set_res_data("3300/0/5518",
-				  &timestamp, sizeof(timestamp), 0);
-	lwm2m_engine_set_res_data("3300/1/5518",
-				  &timestamp, sizeof(timestamp), 0);
+	lwm2m_engine_register_read_callback("3300/2/5700", pms0_read_cb);
+	lwm2m_engine_register_read_callback("3300/3/5700", pms1_read_cb);
+	lwm2m_engine_register_read_callback("3300/4/5700", pms2_read_cb);
 	lwm2m_engine_set_res_data("3300/2/5518",
+				  &timestamp, sizeof(timestamp), 0);
+	lwm2m_engine_set_res_data("3300/3/5518",
+				  &timestamp, sizeof(timestamp), 0);
+	lwm2m_engine_set_res_data("3300/4/5518",
 				  &timestamp, sizeof(timestamp), 0);
 	return 0;
 }
