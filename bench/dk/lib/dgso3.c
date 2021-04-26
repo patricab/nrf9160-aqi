@@ -132,7 +132,7 @@ int init_uart(const struct device *die_dev) {
 	};
 
    /* Config function calls */
-   int err = uart_configure(dev, &conf);
+   int err = uart_configure(die_dev, &conf);
    if (err == -ENOTSUP) {
       LOG_ERR("Error: could not configure UART device");
       return 1;

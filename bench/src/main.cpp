@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-int rx = 0;
+uint8_t rx = 0;
 const char *str;
 
 void setup()
@@ -18,7 +18,8 @@ void loop()
   // Check if serial is available
   if (Serial.available() > 0)
   {
-    Serial.write('s');
+    rx = 's';
+    Serial.write(rx);
     delay(10);
     // rx = Serial.read();
 

@@ -13,7 +13,7 @@ static void uart_cb(const struct device *dev, void *data) {
    // Check if UART RX interrupt is ready
  	if (uart_irq_rx_ready(dev)) {
         // Read from FIFO queue
-        uart_fifo_read(dev, &rx_val, 1);
+        uart_fifo_read(dev, &rx_val, 3);
 
         // End RX at at EOT (newline)
 		if (rx_val == 's') {
@@ -43,6 +43,7 @@ static void btn_cb(uint32_t button_states, uint32_t has_changed)
         }
         // uart_irq_rx_disable(die_dev);
         (void)dk_set_leds(DK_LED1_MSK);
+        uart_irq_rx_disable(die_dev);
         
         // standby_gas();
         // printk("s");
@@ -83,7 +84,6 @@ void main(void) {
         LOG_ERR("Error: could not initalize leds");
     }
 
-    (void)dk_set_leds(DK_LED3_MSK);
     uart_irq_callback_set(die_dev, uart_cb);
 
     // Wait for input
