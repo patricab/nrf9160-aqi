@@ -99,7 +99,7 @@ static int sps30_set_pointer_write(const struct device *dev, uint16_t ptr, uint8
 */
 int sps30_particle_read(const struct device *dev)
 {
-	unsigned char rx_buf[60];
+	unsigned char rx_buf[60] = {0};
 	int ret;
 	
 	// ---- Wake up sequence ---- //
@@ -133,7 +133,7 @@ int sps30_particle_read(const struct device *dev)
 
 	// ---- read data ready flag ---- //
 	// flag_buf[0] = 0x00; flag_buf[1] Data ready flag byte, 0x00: no new measurements, 0x01: new measurements to read; flag_buf[3]: checksum
-	unsigned char flag_buf[3]; 
+	unsigned char flag_buf[3] = {0}; 
 	ret = sps30_set_pointer_read(dev, SPS_CMD_START_STET_DATA_READY, flag_buf);
 	if (ret)
 	{
@@ -153,18 +153,36 @@ int sps30_particle_read(const struct device *dev)
 	#if defined(CONFIG_LOG)
 	printk("\n data ready flag = %d \n",flag_buf[1]);
 	#endif
+	
 
-	ret = sps30_set_pointer_read(dev, SPS_CMD_READ_MEASUREMENT, rx_buf); 
+	ret	= sps30_set_pointer(dev,SPS_CMD_READ_MEASUREMENT);
+	if (ret)
+	{
+		printk("feil i lesing");
+	}
+
+	//ret = sps30_set_pointer_read(dev, SPS_CMD_READ_MEASUREMENT, rx_buf); 
+	ret = i2c_read(dev,rx_buf,60,SPS30_I2C_ADDRESS);
+	k_sleep(K_MSEC(1000));
 	if (ret)
 	{
 		printk("\nFailed to read measurement\n");
 		return ret;
 	}
 
-	sps30.nc_2p5   = (rx_buf[36] << 24) | (rx_buf[37] << 16) | (rx_buf[39] << 8) | rx_buf[40];
-	sps30.nc_10p0  = (rx_buf[48] << 24) | (rx_buf[49] << 16) | (rx_buf[51] << 8) | rx_buf[52];
+
+	sps30.nc_2p5 = (rx_buf[36] << 24) | (rx_buf[37] << 16) | (rx_buf[39] << 8) | rx_buf[40];
+	sps30.nc_10p0 = (rx_buf[48] << 24) | (rx_buf[49] << 16) | (rx_buf[51] << 8) | rx_buf[52];
 	sps30.typ_size = (rx_buf[54] << 24) | (rx_buf[55] << 16) | (rx_buf[57] << 8) | rx_buf[58];
 
+	for (size_t i = 0; i < 59; i++)
+	{
+		printk("\ndata = %d\n", rx_buf[i]);
+	}
+	
+
+
+	//printk("\nnc_10p0 = %d %d\n", r[0], r[1]);
 	#if defined(CONFIG_LOG)
 	// int *r = dec(sps30.nc_2p5);
     // printk("\nnc_2p5 = %d %d\n", r[0], r[1]);
@@ -181,7 +199,7 @@ int sps30_particle_read(const struct device *dev)
 	k_sleep(K_MSEC(1000));
 	
 	// Sleep mode
-	ret = sps30_set_pointer(dev, SPS_CMD_SLEEP); 
+	ret = sps30_set_pointer(dev, SPS_CMD_SLEEP);
 	if (ret)
 	{
 		printk("\nError: Failed to set device to sleep\n");
