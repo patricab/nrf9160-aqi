@@ -62,10 +62,16 @@ UPDATE devices
 SET description = 'Java Test Client'
 WHERE endpoint = 'Thingy:91-Test';
 
+DROP VIEW IF EXISTS gas_VOC CASCADE;
+CREATE VIEW gas_VOC AS 
+SELECT time, age(DATE_TRUNC('second', now()), DATE_TRUNC('second', time)), endpoint, CAST(value AS decimal(38,2)) FROM observation 
+WHERE object = 3300 AND instance = 0
+ORDER BY time desc;
+
 DROP VIEW IF EXISTS gas CASCADE;
 CREATE VIEW gas AS 
 SELECT time, age(DATE_TRUNC('second', now()), DATE_TRUNC('second', time)), endpoint, CAST(value AS decimal(38,2)) FROM observation 
-WHERE object = 3300
+WHERE object = 3300 AND instance = 1
 ORDER BY time desc;
 
 DROP VIEW IF EXISTS temperature CASCADE;
@@ -94,14 +100,14 @@ CREATE VIEW particulate AS
 SELECT time,
 	age(DATE_TRUNC('second', now()), DATE_TRUNC('second', time)),
 	CASE instance
-		WHEN 0 THEN endpoint || ' PM2.5'
-		WHEN 1 THEN endpoint || ' PM10'
-		WHEN 2 THEN endpoint || ' Typical PM'
+		WHEN 2 THEN endpoint || ' PM2.5'
+		WHEN 3 THEN endpoint || ' PM10'
+		WHEN 4 THEN endpoint || ' Typical PM'
 	END ep_size,
 	CAST(value AS decimal(38,2)),
-	CASE object WHEN 10314 THEN 'ppm' END unit
+	CASE object WHEN 3300 THEN 'ug/m3' END unit
 FROM observation
-WHERE object = 10314
+WHERE object = 3300 AND instance > 1
 ORDER BY time desc;
 
 DROP VIEW IF EXISTS sensors CASCADE;
@@ -110,22 +116,24 @@ SELECT time,
 	age(DATE_TRUNC('second', now()), DATE_TRUNC('second', time)),
 	endpoint,
 	CASE object
-		WHEN 3300 THEN 'gas'
+		WHEN 3300 THEN
+			CASE instance
+				WHEN 0 THEN 'gas VOC'
+				WHEN 1 THEN 'gas'
+				WHEN 2 THEN 'PM2.5 particulate'
+				WHEN 3 THEN 'PM10 particulate'
+				WHEN 4 THEN 'Typical particulate'
+			END
 		WHEN 3303 THEN 'temperature'
 		WHEN 3304 THEN 'humidity'
 		WHEN 3325 THEN 'concentration'
 		WHEN 3335 THEN 'colour'
-		WHEN 10314 THEN 
-			CASE instance
-				WHEN 0 THEN 'PM2.5 particulate'
-				WHEN 1 THEN 'PM10 particulate'
-				WHEN 2 THEN 'Typical particulate'
-			END
+		WHEN 10314 THEN 'particulate'
 		ELSE 'unknown'
 	END sensor,
 	CAST(value AS decimal(38,2)),
 	CASE object
-		WHEN 3300 THEN 'ppm'
+		WHEN 3300 THEN 'ppb'
 		WHEN 3303 THEN '°C'
 		WHEN 3304 THEN '%RH'
 		WHEN 3325 THEN 'ppm'
@@ -140,7 +148,8 @@ DROP VIEW IF EXISTS thingy91ejka CASCADE;
 CREATE VIEW thingy91ejka AS 
 SELECT time,
 	age(DATE_TRUNC('second', now()), DATE_TRUNC('second', time)),
-	endpoint, 	CASE object
+	endpoint,
+	CASE object
 		WHEN 3300 THEN 'gas'
 		WHEN 3303 THEN 'temperature'
 		WHEN 3304 THEN 'humidity'
@@ -151,7 +160,7 @@ SELECT time,
 	END sensor,
 	CAST(value AS decimal(38,2)),
 	CASE object
-		WHEN 3300 THEN 'ppm'
+		WHEN 3300 THEN 'ppb'
 		WHEN 3303 THEN '°C'
 		WHEN 3304 THEN '%RH'
 		WHEN 3325 THEN 'ppm'
