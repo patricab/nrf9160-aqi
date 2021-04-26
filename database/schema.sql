@@ -105,7 +105,7 @@ SELECT time,
 		WHEN 4 THEN endpoint || ' Typical PM'
 	END ep_size,
 	CAST(value AS decimal(38,2)),
-	CASE object WHEN 3300 THEN 'ppm' END unit
+	CASE object WHEN 3300 THEN 'ug/m3' END unit
 FROM observation
 WHERE object = 3300
 ORDER BY time desc;
