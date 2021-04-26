@@ -623,13 +623,17 @@ public class ThingySimClient {
 		}
 		initializer.setInstancesForObject(DEVICE, new Thingy91());
 		initializer.setInstancesForObject(LOCATION, locationInstance);
-		initializer.setInstancesForObject(OBJECT_ID_GENERIC_SENSOR      , new RandomGenericSensor());
-		initializer.setInstancesForObject(OBJECT_ID_TEMPERATURE_SENSOR  , new RandomTemperatureSensor());
-		initializer.setInstancesForObject(OBJECT_ID_HUMIDITY_SENSOR     , new RandomHumiditySensor());
-		initializer.setInstancesForObject(OBJECT_ID_PRESSURE_SENSOR     , new RandomPressureSensor());
-		initializer.setInstancesForObject(OBJECT_ID_CONCENTRATION_SENSOR, new RandomConcentrationSensor());
+		initializer.setInstancesForObject(OBJECT_ID_GENERIC_SENSOR     , new RandomGenericSensor());
+		initializer.setInstancesForObject(OBJECT_ID_GENERIC_SENSOR     , new RandomGenericSensor());
+		initializer.setInstancesForObject(OBJECT_ID_GENERIC_SENSOR     , new RandomGenericSensor());
+		initializer.setInstancesForObject(OBJECT_ID_GENERIC_SENSOR     , new RandomGenericSensor());
+		initializer.setInstancesForObject(OBJECT_ID_GENERIC_SENSOR     , new RandomGenericSensor());
+		initializer.setInstancesForObject(OBJECT_ID_TEMPERATURE_SENSOR , new RandomTemperatureSensor());
+		initializer.setInstancesForObject(OBJECT_ID_HUMIDITY_SENSOR    , new RandomHumiditySensor());
+		initializer.setInstancesForObject(OBJECT_ID_PRESSURE_SENSOR    , new RandomPressureSensor());
+		//initializer.setInstancesForObject(OBJECT_ID_CONCENTRATION_SENSOR, new RandomConcentrationSensor());
 		//initializer.setInstancesForObject(OBJECT_ID_COLOUR_SENSOR       , new RandomColourSensor());
-		initializer.setInstancesForObject(OBJECT_ID_PARTICULATE_SENSOR  , new RandomParticulateSensor());
+		//initializer.setInstancesForObject(OBJECT_ID_PARTICULATE_SENSOR  , new RandomParticulateSensor());
 		List<LwM2mObjectEnabler> enablers = initializer.createAll();
 
 		// Create CoAP Config

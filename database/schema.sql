@@ -107,7 +107,7 @@ SELECT time,
 	CAST(value AS decimal(38,2)),
 	CASE object WHEN 3300 THEN 'ug/m3' END unit
 FROM observation
-WHERE object = 3300
+WHERE object = 3300 AND instance > 1
 ORDER BY time desc;
 
 DROP VIEW IF EXISTS sensors CASCADE;
