@@ -36,9 +36,9 @@
 
 struct sps30_data
 {
-	double nc_2p5; // Number concentration PM2.5 [#/cm^3]
-	double nc_10p0; // Number concentration PM10 [#/cm^3]
-	double typ_size; // Typical Particle Size [nm]
+	int32_t nc_2p5; // Number concentration PM2.5 [#/cm^3]
+	int32_t nc_10p0; // Number concentration PM10 [#/cm^3]
+	int32_t typ_size; // Typical Particle Size [nm]
 };
 
 /**

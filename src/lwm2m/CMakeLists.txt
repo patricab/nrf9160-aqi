@@ -39,7 +39,7 @@ target_sources_ifdef(CONFIG_LWM2M_IPSO_HUMIDITY_SENSOR
 target_sources_ifdef(CONFIG_LWM2M_IPSO_CONC_SENSOR
 	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_concentration.c
 	)
-target_sources_ifdef(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR
+target_sources_ifdef(CONFIG_LWM2M_IPSO_GENERIC_SENSOR
 	app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwm2m_pms.c
 	)
 target_sources_ifdef(CONFIG_LWM2M_IPSO_COLOUR_SENSOR

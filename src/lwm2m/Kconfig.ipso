@@ -272,6 +272,9 @@ menuconfig LWM2M_OPENLX_SP_SUPPORT
 
 if LWM2M_OPENLX_SP_SUPPORT
 
+config LWM2M_OPENLX_SP_TIMESTAMP_EXTENSIONS
+	bool "Timestamp"
+
 config LWM2M_OPENLX_SP_PRTCL_SENSOR
 	bool "OPENLX_SP Particulate Sensor Support"
 	help
@@ -290,12 +293,12 @@ config LWM2M_OPENLX_SP_PRTCL_SENSOR_INSTANCE_COUNT
 	  This setting establishes the total count of OPENLX_SP particulate
 	  Sensor instances available to the LWM2M client.
 
-#config LWM2M_OPENLX_SP_PRTCL_SENSOR_TIMESTAMP
-#	bool "Add timestamp resources to OPENLX_SP particulate objects"
-#	default n
-#	depends on LWM2M_OPENLX_SP_PRTCL_SENSOR && LWM2M_OPENLX_SP_TIMESTAMP_EXTENSIONS
-#	help
-#	  Add a non-standard timestamp resource to each particulate object.
+config LWM2M_OPENLX_SP_PRTCL_SENSOR_TIMESTAMP
+	bool "Add timestamp resources to OPENLX_SP particulate objects"
+	default n
+	depends on LWM2M_OPENLX_SP_PRTCL_SENSOR && LWM2M_OPENLX_SP_TIMESTAMP_EXTENSIONS
+	help
+	  Add a non-standard timestamp resource to each particulate object.
 
 endif # LWM2M_OPENLX_SP_PRTCL_SENSOR
 

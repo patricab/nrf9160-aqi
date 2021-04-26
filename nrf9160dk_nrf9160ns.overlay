@@ -1,4 +1,4 @@
-&i2c3 {
+&i2c2 {
 	status = "okay";
 	compatible = "nordic,nrf-twim";
 	sda-pin = <30>;
