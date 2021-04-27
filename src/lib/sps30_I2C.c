@@ -145,8 +145,8 @@ int sps30_particle_read(const struct device *dev)
 	{
 		#if defined(CONFIG_LOG)
 		printk("\n measuring \n");
-		k_sleep(K_MSEC(1000));
 		#endif
+		k_sleep(K_MSEC(1000));
 		(void)sps30_set_pointer_read(dev, SPS_CMD_START_STET_DATA_READY, flag_buf);
 	}
 
@@ -175,14 +175,16 @@ int sps30_particle_read(const struct device *dev)
 	sps30.nc_10p0 = (rx_buf[48] << 24) | (rx_buf[49] << 16) | (rx_buf[51] << 8) | rx_buf[52];
 	sps30.typ_size = (rx_buf[54] << 24) | (rx_buf[55] << 16) | (rx_buf[57] << 8) | rx_buf[58];
 
-	for (size_t i = 0; i < 59; i++)
-	{
-		printk("\ndata = %d\n", rx_buf[i]);
-	}
+	// for (size_t i = 0; i < 59; i++)
+	// {
+	// 	printk("\ndata = %d\n", rx_buf[i]);
+	// }
 	
 
 
-	//printk("\nnc_10p0 = %d %d\n", r[0], r[1]);
+	printk("\nnc_2p5 = %d\n", sps30.nc_2p5);
+	printk("\nnc_10p0 = %d\n", sps30.nc_10p0);
+	printk("\ntyp_size = %d\n", sps30.typ_size);
 	#if defined(CONFIG_LOG)
 	// int *r = dec(sps30.nc_2p5);
     // printk("\nnc_2p5 = %d %d\n", r[0], r[1]);
