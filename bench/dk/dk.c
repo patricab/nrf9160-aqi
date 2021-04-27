@@ -4,75 +4,96 @@
 
 LOG_MODULE_REGISTER(dk, CONFIG_APP_LOG_LEVEL);
 
-static uint8_t rx_val;
-// static int16_t *rx_val;
+unsigned char rx_buf[65];
 static volatile bool data_received;
 static const struct device *die_dev;
 
-static void uart_cb(const struct device *dev, void *data) {
+void uart_cb(const struct device *dev) {
+    unsigned char rx_val = 0;
+    int len = 0;
+
+    // Start processing interrupts in ISR
+    uart_irq_update(dev);
+
    // Check if UART RX interrupt is ready
  	if (uart_irq_rx_ready(dev)) {
         // Read from FIFO queue
-        uart_fifo_read(dev, &rx_val, 3);
+        // uart_fifo_read(dev, &rx_val, 1);
+        len = uart_fifo_read(dev, &rx_val, 1);
+		rx_val = 0;
 
-        // End RX at at EOT (newline)
-		if (rx_val == 's') {
+        (void)dk_set_leds(DK_LED3_MSK);
+        k_sleep(K_MSEC(100));
+
+    // End RX at at EOT (newline)
+	// 	if (rx_val == '\n') {
 			data_received = true;
-		}
-  }
+	// 	} else {
+    //         rx_buf[n] = rx_val; // Add value to buffer
+    //     }
+    // } else {
+    //     return;
+    }
 }
 
 static void btn_cb(uint32_t button_states, uint32_t has_changed)
 {
-    if (has_changed & button_states & DK_BTN1_MSK) {
-        // int err = read_gas(rx_val);
-        // if (err == 1)
-        // {
-        //     LOG_ERR("Error: could not read measurement");
-        // }
-        uart_poll_out(die_dev, '\r');
-        // printk("\r");
+    // if (has_changed & button_states & DK_BTN1_MSK) {
+    //     // int err = read_gas(rx_val);
+    //     // if (err == 1)
+    //     // {
+    //     //     LOG_ERR("Error: could not read measurement");
+    //     // }
+    //     uart_poll_out(die_dev, '\r');
+        // (void)dk_set_leds(DK_LED4_MSK);
+    //     // printk("\r");
     }
-    else if (has_changed & button_states & DK_BTN2_MSK)
+    // else if (has_changed & button_states & DK_BTN2_MSK)
+    if (has_changed & button_states & DK_BTN2_MSK)
     {
-        uart_irq_rx_enable(die_dev);
+        uart_poll_out(die_dev, '\r');
 
+        uart_irq_rx_enable(die_dev);
+        k_sleep(K_MSEC(100));
         data_received = false;
         while (data_received == false)
         {
         }
-        // uart_irq_rx_disable(die_dev);
+        (void)dk_set_leds(DK_NO_LEDS_MSK);
         (void)dk_set_leds(DK_LED1_MSK);
         uart_irq_rx_disable(die_dev);
         
         // standby_gas();
         // printk("s");
     }
-    else if (has_changed & button_states & DK_BTN3_MSK)
-    {
-        zero_gas();
-        // printk("Z");
-    }
+    // else if (has_changed & button_states & DK_BTN3_MSK)
+    // {
+    //     zero_gas();
+    //     // printk("Z");
+    // }
 }
 
 // Initalize buttons library and wait for button state change
 void main(void) {
     // Configure device
-	die_dev = device_get_binding("UART_0");
+	die_dev = device_get_binding(DT_LABEL(DT_NODELABEL(uart0)));
 	if (!die_dev)
 	{
 		LOG_ERR("No device found.");
 	}
 
     // Configure UART
-	int err = init_uart(die_dev);
-	if (err == 1)
-	{
-		LOG_ERR("Error: Could not initialize UART");
-        (void)dk_set_leds(DK_LED4_MSK);
-	}
+	// if (init_uart(die_dev))
+	// {
+	// 	LOG_ERR("Error: Could not initialize UART");
+    //     (void)dk_set_leds(DK_LED4_MSK);
+	// }
+    // if (uart_err_check(die_dev))
+    // {
+    //     (void)dk_set_leds(DK_LED4_MSK);
+    // }
     
-    err = dk_buttons_init(btn_cb);
+    int err = dk_buttons_init(btn_cb);
     if (err < 0)
     {
         LOG_ERR("Error: could not initalize button");
@@ -88,6 +109,6 @@ void main(void) {
 
     // Wait for input
     while (1) {
-            k_cpu_idle();
-        }
+        k_cpu_idle();
+    }
 }
