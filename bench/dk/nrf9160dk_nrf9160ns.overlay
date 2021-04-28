@@ -24,7 +24,7 @@
         };
 };
 
-&uart0 {
+&uart1 {
 	status = "okay";
 	current-speed = <9600>;
 	tx-pin = <0>;

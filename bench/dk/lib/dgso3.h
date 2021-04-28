@@ -22,7 +22,7 @@
 
    @retval 0 if successful, 1 if errors occured
 */
-int read_gas(int16_t *rx_val);
+int read_gas(int32_t *rx_val);
 
 /**
    @brief Set sensor to standby low power mode

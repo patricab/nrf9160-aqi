@@ -15,12 +15,13 @@ void setup()
 
 void loop()
 {
+    Serial.write('\r');
+    Serial.println(Serial.readStringUntil('\n'));
   // Check if serial is available
-  if (Serial.available() > 0)
-  {
-    rx = 's';
-    Serial.write(rx);
-    delay(10);
+  // if (Serial.available() > 0)
+  // {
+    // rx = 's';
+    // delay(100);
     // rx = Serial.read();
 
     // switch (rx)
@@ -46,5 +47,5 @@ void loop()
     //   digitalWrite(9, LOW);
     //   break;
     // }
-  }
+  // }
 }
