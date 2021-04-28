@@ -1,2 +1,4 @@
 build/
+bench/
+test/
 *workspace.code-workspace

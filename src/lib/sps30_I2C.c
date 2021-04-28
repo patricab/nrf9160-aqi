@@ -88,15 +88,6 @@ static int sps30_set_pointer_write(const struct device *dev, uint16_t ptr, uint8
 	return 0;
 }
 
-#if defined(CONFIG_LOG)
-static int * dec(float num) {
-    static int r[2];
-    r[0] = (int)num;
-    r[1] = num - r[0];
-
-    return r;
-}
-#endif
 
 /**
 	@brief Read particle measurment
@@ -108,7 +99,7 @@ static int * dec(float num) {
 */
 int sps30_particle_read(const struct device *dev)
 {
-	unsigned char rx_buf[60];
+	unsigned char rx_buf[60] = {0};
 	int ret;
 	
 	// ---- Wake up sequence ---- //
@@ -142,7 +133,7 @@ int sps30_particle_read(const struct device *dev)
 
 	// ---- read data ready flag ---- //
 	// flag_buf[0] = 0x00; flag_buf[1] Data ready flag byte, 0x00: no new measurements, 0x01: new measurements to read; flag_buf[3]: checksum
-	unsigned char flag_buf[3]; 
+	unsigned char flag_buf[3] = {0}; 
 	ret = sps30_set_pointer_read(dev, SPS_CMD_START_STET_DATA_READY, flag_buf);
 	if (ret)
 	{
@@ -154,16 +145,25 @@ int sps30_particle_read(const struct device *dev)
 	{
 		#if defined(CONFIG_LOG)
 		printk("\n measuring \n");
-		k_sleep(K_MSEC(1000));
 		#endif
+		k_sleep(K_MSEC(1000));
 		(void)sps30_set_pointer_read(dev, SPS_CMD_START_STET_DATA_READY, flag_buf);
 	}
 
 	#if defined(CONFIG_LOG)
 	printk("\n data ready flag = %d \n",flag_buf[1]);
 	#endif
+	
 
-	ret = sps30_set_pointer_read(dev, SPS_CMD_READ_MEASUREMENT, rx_buf); 
+	ret	= sps30_set_pointer(dev,SPS_CMD_READ_MEASUREMENT);
+	if (ret)
+	{
+		printk("feil i lesing");
+	}
+
+	//ret = sps30_set_pointer_read(dev, SPS_CMD_READ_MEASUREMENT, rx_buf); 
+	ret = i2c_read(dev,rx_buf,60,SPS30_I2C_ADDRESS);
+	k_sleep(K_MSEC(1000));
 	if (ret)
 	{
 		printk("\nFailed to read measurement\n");
@@ -174,9 +174,19 @@ int sps30_particle_read(const struct device *dev)
 	sps30.nc_10p0 = (rx_buf[48] << 24) | (rx_buf[49] << 16) | (rx_buf[51] << 8) | rx_buf[52];
 	sps30.typ_size = (rx_buf[54] << 24) | (rx_buf[55] << 16) | (rx_buf[57] << 8) | rx_buf[58];
 
+	// for (size_t i = 0; i < 59; i++)
+	// {
+	// 	printk("\ndata = %d\n", rx_buf[i]);
+	// }
+	
+
+
+	printk("\nnc_2p5 = %d\n", sps30.nc_2p5);
+	printk("\nnc_10p0 = %d\n", sps30.nc_10p0);
+	printk("\ntyp_size = %d\n", sps30.typ_size);
 	#if defined(CONFIG_LOG)
-	int *r = dec(sps30.nc_2p5);
-    printk("\nnc_2p5 = %d %d\n", r[0], r[1]);
+	// int *r = dec(sps30.nc_2p5);
+    // printk("\nnc_2p5 = %d %d\n", r[0], r[1]);
 	#endif
 
 	// Stop measurment
@@ -190,7 +200,7 @@ int sps30_particle_read(const struct device *dev)
 	k_sleep(K_MSEC(1000));
 	
 	// Sleep mode
-	ret = sps30_set_pointer(dev, SPS_CMD_SLEEP); 
+	ret = sps30_set_pointer(dev, SPS_CMD_SLEEP);
 	if (ret)
 	{
 		printk("\nError: Failed to set device to sleep\n");
@@ -216,7 +226,7 @@ int sps30_init(const struct device *dev, struct sps30_data *data)
 	
 	// nRF I2C master configuration
 	uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_MASTER;
-	uint8_t id[6];
+	//uint8_t id[6];
 
 	if (i2c_configure(dev, i2c_cfg))
 	{

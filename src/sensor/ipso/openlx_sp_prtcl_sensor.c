@@ -11,7 +11,7 @@
  * Section: "10. OpenLX SP Object: Particulate"
  */
 
-#define LOG_MODULE_NAME net_ipso_prtcl_sensor
+#define LOG_MODULE_NAME net_openlx_sp_prtcl_sensor
 #define LOG_LEVEL CONFIG_LWM2M_LOG_LEVEL
 
 #include <logging/log.h>
@@ -23,7 +23,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #include "lwm2m_object.h"
 #include "lwm2m_engine.h"
 
-#ifdef CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR_TIMESTAMP
+#ifdef CONFIG_LWM2M_IPSO_TIMESTAMP_EXTENSIONS
 #define ADD_TIMESTAMPS 1
 #else
 #define ADD_TIMESTAMPS 0
@@ -65,7 +65,7 @@ static float32_value_t min_range_value[MAX_INSTANCE_COUNT];
 static float32_value_t max_range_value[MAX_INSTANCE_COUNT];
 static float32_value_t measured_particle_size[MAX_INSTANCE_COUNT];
 
-static struct lwm2m_engine_obj temp_sensor;
+static struct lwm2m_engine_obj prtcl_sensor;
 static struct lwm2m_engine_obj_field fields[] = {
 	OBJ_FIELD_DATA(PRTCL_SENSOR_VALUE_ID, R, FLOAT32),
 	OBJ_FIELD_DATA(PRTCL_UNITS_ID, R_OPT, STRING),
@@ -89,7 +89,7 @@ static void update_min_measured(uint16_t obj_inst_id, int index)
 {
 	min_measured_value[index].val1 = sensor_value[index].val1;
 	min_measured_value[index].val2 = sensor_value[index].val2;
-	NOTIFY_OBSERVER(IPSO_OBJECT_PRTCL_SENSOR_ID, obj_inst_id,
+	NOTIFY_OBSERVER(OPENLX_SP_OBJECT_PRTCL_SENSOR_ID, obj_inst_id,
 			PRTCL_MIN_MEASURED_VALUE_ID);
 }
 
@@ -97,7 +97,7 @@ static void update_max_measured(uint16_t obj_inst_id, int index)
 {
 	max_measured_value[index].val1 = sensor_value[index].val1;
 	max_measured_value[index].val2 = sensor_value[index].val2;
-	NOTIFY_OBSERVER(IPSO_OBJECT_PRTCL_SENSOR_ID, obj_inst_id,
+	NOTIFY_OBSERVER(OPENLX_SP_OBJECT_PRTCL_SENSOR_ID, obj_inst_id,
 			PRTCL_MAX_MEASURED_VALUE_ID);
 }
 
@@ -122,7 +122,7 @@ static int measured_particle_size(uint16_t obj_inst_id, int index)
 {
 	measured_particle_size[index].val1 = sensor_value[index].val1;
 	measured_particle_size[index].val2 = sensor_value[index].val2;
-	NOTIFY_OBSERVER(IPSO_OBJECT_PRTCL_SENSOR_ID, obj_inst_id,
+	NOTIFY_OBSERVER(OPENLX_SP_OBJECT_PRTCL_SENSOR_ID, obj_inst_id,
 			PRTCL_MEASURED_PARTICLE_SIZE_ID);
 }
 
@@ -250,7 +250,7 @@ static struct lwm2m_engine_obj_inst *prtcl_sensor_create(uint16_t obj_inst_id)
 
 static int openlx_sp_prtcl_sensor_init(const struct device *dev)
 {
-	prtcl_sensor.obj_id = OPNELX_SP_OBJECT_PRTCL_SENSOR_ID;
+	prtcl_sensor.obj_id = OPENLX_SP_OBJECT_PRTCL_SENSOR_ID;
 	prtcl_sensor.fields = fields;
 	prtcl_sensor.field_count = ARRAY_SIZE(fields);
 	prtcl_sensor.max_instance_count = MAX_INSTANCE_COUNT;
@@ -260,5 +260,5 @@ static int openlx_sp_prtcl_sensor_init(const struct device *dev)
 	return 0;
 }
 
-SYS_INIT(ipso_prtcl_sensor_init, APPLICATION,
+SYS_INIT(openlx_sp_prtcl_sensor_init, APPLICATION,
 	 CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
