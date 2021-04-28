@@ -131,6 +131,16 @@ static int lwm2m_setup(void)
 	/* use IMEI as serial number */
 	lwm2m_init_device(imei_buf);
 	lwm2m_init_security(&client, endpoint_name);
+
+	// Gas (DGSO3)
+	lwm2m_init_gas();
+	// Particle (SPS30)
+	lwm2m_init_pms();
+#if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
+	/* Gas (Resistance) */
+	lwm2m_init_gas_res();
+#endif
+
 #if defined(CONFIG_LWM2M_LOCATION_OBJ_SUPPORT)
 	lwm2m_init_location();
 #endif
@@ -149,9 +159,6 @@ static int lwm2m_setup(void)
 #if defined(CONFIG_LWM2M_IPSO_HUMIDITY_SENSOR)
 	lwm2m_init_hum();
 #endif
-#if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
-	lwm2m_init_conc();
-#endif
 #if defined(CONFIG_LWM2M_OPENLX_SP_PRTCL_SENSOR)
 	lwm2m_init_prtcl();
 #endif
@@ -164,7 +171,6 @@ static int lwm2m_setup(void)
 #if defined(CONFIG_LWM2M_IPSO_ACCELEROMETER)
 	lwm2m_init_accel();
 #endif
-   lwm2m_init_gas_res();
 	return 0;
 }
 

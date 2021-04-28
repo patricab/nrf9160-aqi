@@ -25,8 +25,18 @@ int lwm2m_init_device(char *serial_num);
 /* Location */
 int lwm2m_init_location(void);
 
+
+// Gas (DGSO3)
+int lwm2m_init_gas(void);
+
+// Particle (SPS30)
+int lwm2m_init_pms(void);
+
+#if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
 /* Gas (Resistance) */
 int lwm2m_init_gas_res(void);
+#endif
+
 
 #if defined(CONFIG_LWM2M_FIRMWARE_UPDATE_OBJ_SUPPORT)
 void *firmware_read_cb(uint16_t obj_inst_id, size_t *data_len);
@@ -52,9 +62,6 @@ int lwm2m_init_temp(void);
 int lwm2m_init_hum(void);
 #endif
 
-#if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
-int lwm2m_init_conc(void);
-#endif
 
 #if defined(CONFIG_LWM2M_IPSO_COLOUR_SENSOR)
 int lwm2m_init_colour(void);

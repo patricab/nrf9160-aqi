@@ -4,37 +4,28 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
-/ {
-        aliases {
-                temp-sensor = &bme680;
-                humidity-sensor = &bme680;
-                /*
-                conc-sensor = &dgso3;
-                prtcl-sensor = &sps30;
-                */
-                /* accelerometer = &adxl362; */
-        };
+&uart0 {
+	status = "okay";
+	current-speed = <9600>;
+	tx-pin = <0>;
+	rx-pin = <1>;
 };
 
 &i2c2 {
-        bme680: bme680@76 {
-          compatible = "bosch,bme680";
-          label = "BME680";
-          reg = <0x76>;
-        };
-};
-
-
+	status = "okay";
+	compatible = "nordic,nrf-twim";
+	sda-pin = <30>;
+	scl-pin = <31>;
+    clock-frequency = <I2C_BITRATE_STANDARD>;
 /*
-&spi3 {
-        adxl362: adxl362@0 {};
-};
-
-&i2c4 {
-        sps30: sps30@69 {};
-};
-
-&uart5 {
-         dgso3: dgso3@0 {};
-};
+	sps30@69 {
+		compatible = "sensirion,sps30";
+		label = "SPS30";
+		reg = <0x69>;
+	};
 */
+};
+
+&spi3 {
+    status = "disabled";
+};

@@ -24,13 +24,14 @@ zephyr_include_directories(src)
 zephyr_library_include_directories(
   src/lwm2m
   src/ui
-  src/sensor/bh1749
-  src/sensor/dgso3
-  src/sensor/sensor_sim
-  src/sensor/sps30
+  src/lib
+  # src/sensor/bh1749
+  # src/sensor/dgso3
+  # src/sensor/sensor_sim
+  # src/sensor/sps30
   )
 
 # Application sources
 add_subdirectory(src/lwm2m)
 add_subdirectory(src/ui)
-#add_subdirectory(src/lib)
+add_subdirectory(src/lib)
