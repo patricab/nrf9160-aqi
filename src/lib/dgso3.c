@@ -1,36 +1,52 @@
 #include "dgso3.h"
+#include <stdlib.h>
 
 /* Variables */
-static unsigned char rx_buf[30] = {0};
 static const struct device *dev;
 static volatile bool data_received;
+static unsigned char rx_buf[65];
+static volatile int n;
 
 /* Inital configuration */
 LOG_MODULE_REGISTER(app_uart, CONFIG_APP_LOG_LEVEL);
 
 /* UART recieve (RX) callback */
-// static void uart_cb(const struct device *dev, void *data) {
-//    // Check if UART RX interrupt is ready
-//  	if (uart_irq_rx_ready(dev)) {
-//       // Read from FIFO queue
-// 		uart_fifo_read(dev, rx_buf, sizeof(rx_buf));
+static void uart_cb(const struct device *dev, void *data) {
+   /* Definitions */
+   uint8_t rx_val = 0;
 
-//       // End RX at at EOT (newline)
-// 		if (*rx_buf == '\n') {
-// 			data_received = true;
-// 		}
-//   } // }
+   // Start processing interrupts in ISR
+   uart_irq_update(dev);
+
+   // Check if UART RX interrupt is ready
+ 	if (uart_irq_rx_ready(dev)) {
+      // Read from FIFO queue
+      uart_fifo_read(dev, &rx_val, 1);
+
+      // End RX at at EOT (newline)
+		if (rx_val == '\n') {
+			data_received = true;
+		} else {
+         rx_buf[n] = rx_val; // Add value to buffer
+         n++;
+      }
+   } else {
+      return;
+   }
+}
+
 
 /* UART recieve (RX) */
-// static void uart_rx(struct k_timer *timer) {
-// static void uart_rx() {
-//    uart_irq_rx_enable(dev);
-//    data_received = false;
-//    while (data_received == false) {
-//       LOG_DBG("%i", data_received);
-//    }
-//    uart_irq_rx_disable(dev);
-// }
+static void uart_rx(void) {
+   /* Definitions */
+   n = 0; // Zero buffer index
+
+   uart_irq_rx_enable(dev); // Enable interrupts
+   data_received = false;
+   while (data_received == false) { // Wait for recieved data
+   }
+   uart_irq_rx_disable(dev); // Disable interrupts
+}
 
 /**
    @brief Read sensor gas measurement (single measurement)
@@ -39,78 +55,31 @@ LOG_MODULE_REGISTER(app_uart, CONFIG_APP_LOG_LEVEL);
 
    @retval 0 if successful, 1 if errors occured
 */
-int read_gas(int32_t rx_val) {
-   unsigned char val_buf[15] = {0};
-   unsigned char recv_char = 0;
-   int counter = 0;
+int read_gas(int32_t *rx_val) {
+   /* Definitions */
+   unsigned char val_buf[4] = {0};
 
-   // Send command 
-   // uart_poll_out(dev, '\r');
-   printk("\n");
+   /* Send command */
+   uart_poll_out(dev, '\r');
 
-   // Listen for data 
-   while (1) { // Run until newline 
-      while (uart_poll_in(dev, &recv_char) < 0) { // Wait until character is available
-      }
-      rx_buf[counter] = recv_char;
-      
-      if (recv_char == '\n') {
-         break;
-      }
-      // if (counter < sizeof(rx_buf)) { // Check if buffer is full
-      //    rx_buf[counter] = recv_char;
-      //    uart_poll_in(dev, &recv_char);
-      //    counter++;
-      // } else {
-      //    break;
-      // }
+   /* Listen for data */
+   uart_rx();
+
+   // Find PPB values between first and second comma
+   // rx_buf[13:16]
+   for (int i = 0; i < 4; i++)
+   {
+      val_buf[i] = rx_buf[i + 13];
    }
+   
+   // Output rx buffer
+   sscanf(val_buf, "%d", rx_val);
 
-   // Get PPB values at second comma value
-   // for (int i = 0; i < sizeof(rx_buf); i++) {
-   //    if (rx_buf[i] == ',') {
-   //       int k = 0;
-   //       i += 2; // Skip space after comma
-   //       while (rx_buf[i] != ',') {
-   //          val_buf[k] = rx_buf[i];
-   //          i++; // Increment index for output buffer and rx buffer
-   //          k++;
-   //       }
-   //       break;
-   //    }
-   // }
-   
-   // Output modified rx buffer
-   // sscanf(val_buf, "%d", &rx_val);
-   rx_val = (int32_t)recv_char;
-   // rx_val = rx_buf[0];
-   // printk("\n %d \n", rx_val);
-   
    return 0;
 }
 
 /**
    @brief Set sensor to standby low power mode
-
-   @retval none
-*/
-void standby_gas(void) {
-   /* Send command */
-   // printk("s");
-   uart_poll_out(dev, 's');
-}
-
-/**
-   @brief Calibrate sensor zero value
-
-   @retval none
-*/
-void zero_gas(void) {
-   /* Send command */
-   uart_poll_out(dev, 'Z');
-}
-
-/**
    @brief Set specific sensor zero value
 
    @param val User zero value
@@ -122,39 +91,12 @@ void set_gas(uint8_t val) {
    uart_poll_out(dev, 'S');
 
    /* Send value */
-   // delay(K_MSEC(10));
-   printk("%u", val);
+   printk("%d", val);
 
    /* Send return character */
-   // delay(K_MSEC(10));
    uart_poll_out(dev, '\r');
 }
 
-// float get_token_float(char *ibuf, int get_token) {
-//    uint8_t token = 0;
-//    uint8_t i =  0;
-//    float ret = 0.0;
-//    char return_buf[32];
-//    memset(return_buf, 0, sizeof(return_buf));
-
-//    while ((uint8_t) *ibuf != 0) {
-//       if (*ibuf == ',') {
-//          if (token == get_token) {
-//             ret = strtof(return_buf, NULL);
-//             printk("get token %i %s %f\n", token, return_buf, ret);
-//             break;
-//          }
-//          token++;
-//          i = 0;
-//          memset(return_buf, 0, sizeof(return_buf));
-//       } else {
-//          return_buf[i] = *ibuf;
-//          i++;
-//       }
-//       ibuf++;
-//    }
-//    return ret;
-// }
 
 /**
    @brief Initialize UART device
@@ -165,23 +107,19 @@ void set_gas(uint8_t val) {
 */
 int init_uart(const struct device *die_dev) {
    /* Definitions */
-   struct uart_config conf = {
+   dev = die_dev;
+   const struct uart_config conf = {
 		.baudrate = 9600,
 		.parity = UART_CFG_PARITY_NONE,
 		.stop_bits = UART_CFG_STOP_BITS_1,
 		.data_bits = UART_CFG_DATA_BITS_8,
 		.flow_ctrl = UART_CFG_FLOW_CTRL_NONE
 	};
-   dev = die_dev;
 
    /* Config function calls */
-   int err = uart_configure(dev, &conf);
-   if (err) {
+   int err = uart_configure(die_dev, &conf);
+   if (err == -ENOTSUP) {
       LOG_ERR("Error: could not configure UART device");
       return 1;
    }
-
-   /* Configure UART callback */
-   // uart_irq_callback_set(dev, uart_cb);
-   return 0;
 }
