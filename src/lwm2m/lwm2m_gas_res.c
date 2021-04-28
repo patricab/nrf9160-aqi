@@ -55,12 +55,12 @@ static void *gas_res_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res
 	}
 
 	read_gas_resistance(die_dev, &gas_res_float);
-	lwm2m_engine_set_float32("3325/0/5700", &gas_res_float);
+	lwm2m_engine_set_float32("3300/0/5700", &gas_res_float);
 	*data_len = sizeof(gas_res_float);
 	/* get current time from device */
 	lwm2m_engine_get_s32("3/0/13", &ts);
 	/* set timestamp */
-	lwm2m_engine_set_s32("3325/0/5518", ts);
+	lwm2m_engine_set_s32("3300/0/5518", ts);
 
 	return &gas_res_float;
 }
@@ -72,9 +72,9 @@ int lwm2m_init_gas_res(void)
 		LOG_ERR("No device found.");
 	}
 
-	lwm2m_engine_create_obj_inst("3325/0");
-	lwm2m_engine_register_read_callback("3325/0/5700", gas_res_read_cb);
-	lwm2m_engine_set_res_data("3325/0/5518",
+	lwm2m_engine_create_obj_inst("3300/0");
+	lwm2m_engine_register_read_callback("3300/0/5700", gas_res_read_cb);
+	lwm2m_engine_set_res_data("3300/0/5518",
 				  &timestamp, sizeof(timestamp), 0);
 	return 0;
 }
