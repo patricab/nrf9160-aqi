@@ -49,10 +49,10 @@ static void *gas_res_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res
 	int32_t ts;
 
 	/* Only object instance 0 is currently used */
-	if (obj_inst_id != 0) {
-		*data_len = 0;
-		return NULL;
-	}
+	// if (obj_inst_id != 0) {
+	// 	*data_len = 0;
+	// 	return NULL;
+	// }
 
 	read_gas_resistance(die_dev, &gas_res_float);
 	lwm2m_engine_set_float32("3300/0/5700", &gas_res_float);
