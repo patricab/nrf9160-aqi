@@ -1,5 +1,4 @@
 #include "dgso3.h"
-#include <stdlib.h>
 
 /* Variables */
 static const struct device *dev;
@@ -80,12 +79,32 @@ int read_gas(int32_t *rx_val) {
 
 /**
    @brief Set sensor to standby low power mode
+
+   @retval none
+*/
+void standby_gas(void) {
+   /* Send command */
+   uart_poll_out(dev, 's');
+}
+
+/**
+   @brief Calibrate sensor zero value
+
+   @retval none
+*/
+void zero_gas(void) {
+   /* Send command */
+   uart_poll_out(dev, 'Z');
+}
+
+/**
    @brief Set specific sensor zero value
 
    @param val User zero value
 
    @retval none
  */
+
 void set_gas(uint8_t val) {
    /* Send command */
    uart_poll_out(dev, 'S');
@@ -122,4 +141,8 @@ int init_uart(const struct device *die_dev) {
       LOG_ERR("Error: could not configure UART device");
       return 1;
    }
+
+   /* Configure UART callback */
+   uart_irq_callback_set(dev, uart_cb);
+   return 0;
 }
