@@ -1,48 +1,51 @@
 #include "dgso3.h"
+#include <stdlib.h>
 
 /* Variables */
-static uint8_t *rx_buf = {NULL};
 static const struct device *dev;
 static volatile bool data_received;
-
-/* Function declarations */
-// static void uart_rx(struct k_timer *delay_timer);
+static unsigned char rx_buf[65];
+static volatile int n;
 
 /* Inital configuration */
-// K_TIMER_DEFINE(delay_timer, uart_rx, NULL);
 LOG_MODULE_REGISTER(app_uart, CONFIG_APP_LOG_LEVEL);
-
 
 /* UART recieve (RX) callback */
 static void uart_cb(const struct device *dev, void *data) {
+   /* Definitions */
+   uint8_t rx_val = 0;
+
+   // Start processing interrupts in ISR
+   uart_irq_update(dev);
+
    // Check if UART RX interrupt is ready
  	if (uart_irq_rx_ready(dev)) {
       // Read from FIFO queue
-		uart_fifo_read(dev, rx_buf, sizeof(rx_buf));
+      uart_fifo_read(dev, &rx_val, 1);
 
       // End RX at at EOT (newline)
-      for (int i = 0; i < sizeof(r_buf); i++) {
-         if (rx_buf[i] == '\n') {
-            data_received = true;
-            break;
-         }
+		if (rx_val == '\n') {
+			data_received = true;
+		} else {
+         rx_buf[n] = rx_val; // Add value to buffer
+         n++;
       }
-  }
+   } else {
+      return;
+   }
 }
 
-/* Delay function */
-// static void delay(k_timeout_t t) {
-//    k_timer_start(&delay_timer, t, K_NO_WAIT);
-// }
 
 /* UART recieve (RX) */
-// static void uart_rx(struct k_timer *timer) {
-static void uart_rx() {
-   uart_irq_rx_enable(dev);
+static void uart_rx(void) {
+   /* Definitions */
+   n = 0; // Zero buffer index
+
+   uart_irq_rx_enable(dev); // Enable interrupts
    data_received = false;
-   while (data_received == false) {
+   while (data_received == false) { // Wait for recieved data
    }
-   uart_irq_rx_disable(dev);
+   uart_irq_rx_disable(dev); // Disable interrupts
 }
 
 /**
@@ -52,20 +55,26 @@ static void uart_rx() {
 
    @retval 0 if successful, 1 if errors occured
 */
-int read_gas(int16_t *rx_val) {
+int read_gas(int32_t *rx_val) {
+   /* Definitions */
+   unsigned char val_buf[4] = {0};
+
    /* Send command */
-   printk("\r\n");
+   uart_poll_out(dev, '\r');
 
    /* Listen for data */
-   // uart_rx(&delay_timer);
    uart_rx();
-   if (!rx_buf[0]) { // Check for empty buffer
-      LOG_ERR("Error: device RX timed out");
-      return 1;
-   }
 
-   // // Output rx buffer
-   sscanf(rx_buf, "%d", (int *)&rx_val);
+   // Find PPB values between first and second comma
+   // rx_buf[13:16]
+   for (int i = 0; i < 4; i++)
+   {
+      val_buf[i] = rx_buf[i + 13];
+   }
+   
+   // Output rx buffer
+   sscanf(val_buf, "%d", rx_val);
+
    return 0;
 }
 
@@ -76,7 +85,7 @@ int read_gas(int16_t *rx_val) {
 */
 void standby_gas(void) {
    /* Send command */
-   printk("s\n");
+   uart_poll_out(dev, 's');
 }
 
 /**
@@ -86,7 +95,7 @@ void standby_gas(void) {
 */
 void zero_gas(void) {
    /* Send command */
-   printk("Z\n");
+   uart_poll_out(dev, 'Z');
 }
 
 /**
@@ -98,16 +107,13 @@ void zero_gas(void) {
  */
 void set_gas(uint8_t val) {
    /* Send command */
-   printk("S");
+   uart_poll_out(dev, 'S');
 
    /* Send value */
-   // delay(K_MSEC(10));
-   // printk(&val);
    printk("%d", val);
 
    /* Send return character */
-   // delay(K_MSEC(10));
-   printk("\r");
+   uart_poll_out(dev, '\r');
 }
 
 /**
@@ -119,22 +125,23 @@ void set_gas(uint8_t val) {
 */
 int init_uart(const struct device *die_dev) {
    /* Definitions */
-   uint32_t baud = 9600;
-   enum uart_config_parity parity = UART_CFG_PARITY_NONE;
-   enum uart_config_stop_bits stop = UART_CFG_STOP_BITS_1;
-   enum uart_config_data_bits data = UART_CFG_DATA_BITS_8;
-   enum uart_config_flow_control flow = UART_CFG_FLOW_CTRL_NONE;
-   const struct uart_config conf = {baud, parity, stop, data, flow};
    dev = die_dev;
+   const struct uart_config conf = {
+		.baudrate = 9600,
+		.parity = UART_CFG_PARITY_NONE,
+		.stop_bits = UART_CFG_STOP_BITS_1,
+		.data_bits = UART_CFG_DATA_BITS_8,
+		.flow_ctrl = UART_CFG_FLOW_CTRL_NONE
+	};
 
    /* Config function calls */
-   int err = uart_configure(dev, &conf);
-   if (err != 0) {
+   int err = uart_configure(die_dev, &conf);
+   if (err == -ENOTSUP) {
       LOG_ERR("Error: could not configure UART device");
       return 1;
    }
 
    /* Configure UART callback */
-   // uart_irq_callback_set(dev, uart_cb);
+   uart_irq_callback_set(dev, uart_cb);
    return 0;
 }
