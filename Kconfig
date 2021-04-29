@@ -8,6 +8,13 @@ menu "Application sample"
 rsource "src/ui/Kconfig"
 rsource "src/lwm2m/Kconfig.ipso"
 
+config GAS 
+	bool "Use gas (DGSO3) sensor"
+	default n
+config PMS 
+	bool "Use particle (SPS30) sensor"
+	default n
+	
 config APP_LWM2M_SERVER
 	string "LwM2M server name or IP address"
 	help

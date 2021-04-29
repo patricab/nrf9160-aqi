@@ -87,7 +87,7 @@ int lwm2m_init_pms(void)
 {
 	LOG_DBG("init_pms function");
 
-	die_dev = device_get_binding(DT_LABEL(DT_NODELABEL(i2c2)));
+	die_dev = device_get_binding(DT_LABEL(DT_NODELABEL(i2c3)));
 	if (!die_dev) {
 		LOG_ERR("No data device found.");
 	}

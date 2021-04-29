@@ -132,10 +132,14 @@ static int lwm2m_setup(void)
 	lwm2m_init_device(imei_buf);
 	lwm2m_init_security(&client, endpoint_name);
 
-	// Gas (DGSO3)
+// Gas (DGSO3)
+#if defined(CONFIG_GAS)
 	lwm2m_init_gas();
-	// Particle (SPS30)
+#endif
+// Particle (SPS30)
+#if defined(CONFIG_PMS)
 	lwm2m_init_pms();
+#endif
 #if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
 	/* Gas (Resistance) */
 	lwm2m_init_gas_res();
