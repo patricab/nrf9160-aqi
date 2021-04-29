@@ -26,15 +26,19 @@ int lwm2m_init_device(char *serial_num);
 int lwm2m_init_location(void);
 
 
-// Gas (DGSO3)
-int lwm2m_init_gas(void);
 
-// Particle (SPS30)
-int lwm2m_init_pms(void);
 
 #if defined(CONFIG_LWM2M_IPSO_CONC_SENSOR)
 /* Gas (Resistance) */
 int lwm2m_init_gas_res(void);
+#endif
+// Gas (DGSO3)
+#if defined(CONFIG_GAS)
+int lwm2m_init_gas(void);
+#endif
+// Particle (SPS30)
+#if defined(CONFIG_PMS)
+int lwm2m_init_pms(void);
 #endif
 
 

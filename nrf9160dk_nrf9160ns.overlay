@@ -4,26 +4,19 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
-&uart0 {
+&uart1 {
 	status = "okay";
 	current-speed = <9600>;
 	tx-pin = <0>;
 	rx-pin = <1>;
 };
 
-&i2c2 {
+&i2c3 {
 	status = "okay";
 	compatible = "nordic,nrf-twim";
 	sda-pin = <30>;
 	scl-pin = <31>;
-    clock-frequency = <I2C_BITRATE_STANDARD>;
-/*
-	sps30@69 {
-		compatible = "sensirion,sps30";
-		label = "SPS30";
-		reg = <0x69>;
-	};
-*/
+        clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &spi3 {

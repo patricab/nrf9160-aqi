@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include "dgso3.h"
+#include <dk_buttons_and_leds.h>
 
 LOG_MODULE_REGISTER(app_lwm2m_gas, CONFIG_APP_LOG_LEVEL);
 
@@ -24,16 +25,18 @@ static int read_val(const struct device *temp_dev,
 			    struct float32_value *float_val)
 {
 	int32_t *val = 0;
-	int err = read_gas(&val);
+	int err = read_gas(val);
 	if (err)
 	{
 		LOG_ERR("Error: can't get data");
-		// return 1;
+		(void)dk_set_leds(DK_LED2_MSK);
+		return 1;
 	}
-
 	// standby_gas(); // Set sensor to low power mode
-	float_val->val1 = val;
+	float_val->val1 = *val;
 	float_val->val2 = 0;
+
+	(void)dk_set_leds(DK_LED1_MSK);
 	return 0;
 }
 
@@ -74,6 +77,9 @@ int lwm2m_init_gas(void)
 	{
 		LOG_ERR("I/O error");
 	}
+
+	(void)dk_leds_init();
+	(void)dk_set_leds(DK_LED4_MSK);
 
 	lwm2m_engine_create_obj_inst("3300/1");
 	lwm2m_engine_register_read_callback("3300/1/5700", gas_read_cb);
