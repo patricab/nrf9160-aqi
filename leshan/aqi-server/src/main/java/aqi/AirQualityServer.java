@@ -606,7 +606,7 @@ public class AirQualityServer {
 									Collection<Observation> previousObsersations) {
 				System.out.println("new device: " + registration);
 				timer = new Timer();
-				timer.schedule(new ReadTimerTask(lwServer, registration), 2000);
+				timer.schedule(new ReadTimerTask(lwServer, registration), 30000);
 				airqdb.setState(registration, 2);
 				airqdb.log(registration.getEndpoint(), registration.getAddress().toString(), registration.getId(), "Registered");
 				Date date = new Date(System.currentTimeMillis());
@@ -624,7 +624,7 @@ public class AirQualityServer {
 			public void updated(RegistrationUpdate update,
 								Registration updatedReg, Registration previousReg) {
 				System.out.println("device is still here: " + updatedReg.getEndpoint());
-				timer.schedule(new ReadTimerTask(lwServer, updatedReg), 1000);
+				//timer.schedule(new ReadTimerTask(lwServer, updatedReg), 60000);
 			}
 
 			public void unregistered(Registration registration, Collection<Observation> observations,
@@ -650,6 +650,7 @@ public class AirQualityServer {
 
 
 			public void onError(Observation observation, Registration registration, Exception error) {
+				airqdb.logError(registration.getEndpoint(), registration.getAddress().toString(), registration.getId(), error.toString());
 			}
 
 			public void newObservation(Observation observation, Registration registration) {
@@ -666,7 +667,7 @@ public class AirQualityServer {
 			public void onAwake(Registration registration) {
 				airqdb.setState(registration, 2);
 				timer = new Timer();
-				timer.schedule(new ReadTimerTask(lwServer, registration), 2500);
+				timer.schedule(new ReadTimerTask(lwServer, registration), 60000);
 				System.out.println("onAwake " + registration);
 			}
 		});
