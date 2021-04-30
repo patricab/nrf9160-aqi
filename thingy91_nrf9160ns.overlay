@@ -4,17 +4,12 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
-
-&spi3 {
-    status = "disabled";
-};
-
 &uart0 {
 	compatible = "nordic,nrf-uarte";
 	current-speed = <9600>;
 	status = "okay";
-	tx-pin = <18>;
-	rx-pin = <19>;
+	tx-pin = <4>;
+	rx-pin = <5>;
 };
 
 /*
