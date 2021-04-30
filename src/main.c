@@ -406,7 +406,7 @@ static void modem_connect(void)
 	do {
 		LOG_INF("Connecting to LTE network.");
 		LOG_INF("This may take several minutes.");
-		ui_led_set_pattern(UI_LTE_CONNECTING);
+		// ui_led_set_pattern(UI_LTE_CONNECTING);
 
 		ret = lte_lc_connect();
 		if (ret < 0) {
@@ -417,7 +417,7 @@ static void modem_connect(void)
 			k_sleep(K_SECONDS(60));
 		} else {
 			LOG_INF("Connected to LTE network");
-			ui_led_set_pattern(UI_LTE_CONNECTED);
+			// ui_led_set_pattern(UI_LTE_CONNECTED);
 		}
 	} while (ret < 0);
 }
