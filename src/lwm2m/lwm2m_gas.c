@@ -25,7 +25,7 @@ static int read_val(const struct device *temp_dev,
 			    struct float32_value *float_val)
 {
 	int32_t *val = 0;
-	int err = read_gas(val);
+	int err = read_gas(&val);
 	if (err)
 	{
 		LOG_ERR("Error: can't get data");
@@ -33,7 +33,7 @@ static int read_val(const struct device *temp_dev,
 		return 1;
 	}
 	// standby_gas(); // Set sensor to low power mode
-	float_val->val1 = *val;
+	float_val->val1 = val;
 	float_val->val2 = 0;
 
 	(void)dk_set_leds(DK_LED1_MSK);
