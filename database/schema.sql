@@ -179,10 +179,14 @@ age = DATE_TRUNC('second', age);
 
 DROP VIEW IF EXISTS devicesview CASCADE;
 CREATE VIEW devicesview AS 
-SELECT time,
+SELECT 
+	time,
 	age(DATE_TRUNC('second', now()), DATE_TRUNC('second', time)),
 	endpoint,
 	description,
 	status
 FROM devices
 order by time desc;
+
+SELECT age FROM devicesview ;
+SELECT MAX(age) - INTERVAL '1 hour' from devicesview;
