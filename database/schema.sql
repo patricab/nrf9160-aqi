@@ -179,8 +179,9 @@ age = DATE_TRUNC('second', age);
 
 DROP VIEW IF EXISTS devicesview CASCADE;
 CREATE VIEW devicesview AS 
-SELECT time,
-	age(DATE_TRUNC('second', now()), DATE_TRUNC('second', time)),
+SELECT 
+	time,
+	age(DATE_TRUNC('second', now() - INTERVAL '1 hour'), DATE_TRUNC('second', time)) ,
 	endpoint,
 	description,
 	status
