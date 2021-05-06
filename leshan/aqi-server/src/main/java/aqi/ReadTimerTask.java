@@ -91,13 +91,13 @@ public class ReadTimerTask extends TimerTask {
 			sendReq(3300, 0, 5700); // Gas sensor
 			Thread.sleep(500);
 			sendReq(3300, 1, 5700); // Concentration sensor
-			Thread.sleep(500);
+			Thread.sleep(2000);
 			sendReq(3300, 2, 5700); // Particulate sensor 2.5PM
-			Thread.sleep(500);
+			Thread.sleep(10000);
 			sendReq(3300, 3, 5700); // Particulate sensor 10PM
-			Thread.sleep(500);
+			Thread.sleep(10000);
 			sendReq(3300, 4, 5700); // Particulate sensor Typisk PM
-			Thread.sleep(500);
+			Thread.sleep(10000);
 			sendReq(3303, 0, 5700); // Temperature sensor
 			Thread.sleep(500);
 			sendReq(3304, 0, 5700); // Humidity sensor
