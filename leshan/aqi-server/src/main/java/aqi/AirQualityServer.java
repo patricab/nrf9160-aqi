@@ -1,19 +1,19 @@
 /*******************************************************************************
  * Copyright (c) 2013-2015 Sierra Wireless and others.
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * and Eclipse Distribution License v1.0 which accompany this distribution.
- * 
+ *
  * The Eclipse Public License is available at
  *    http://www.eclipse.org/legal/epl-v20.html
  * and the Eclipse Distribution License is available at
  *    http://www.eclipse.org/org/documents/edl-v10.html.
- * 
+ *
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *     Bosch Software Innovations - added Redis URL support with authentication
- *     Firis SA - added mDNS services registering 
+ *     Firis SA - added mDNS services registering
  *******************************************************************************/
 package aqi;
 
@@ -160,7 +160,7 @@ public class AirQualityServer {
 		options.addOption("m", "modelsfolder", true, "A folder which contains object models in OMA DDF(.xml) format.");
 		options.addOption("oc", "activate support of old/deprecated cipher suites.");
 		options.addOption("r", "redis", true,
-		        "Use redis to store registration and securityInfo. \n" 
+		        "Use redis to store registration and securityInfo. \n"
 		      + "The URL of the redis server should be given using this format : 'redis://:password@hostname:port/db_number'\n"
 		      + "Example without DB and password: 'redis://localhost:6379'\nDefault: redis is not used.");
 		options.addOption("mdns", "publishDNSSdServices", false,
@@ -429,6 +429,8 @@ public class AirQualityServer {
 		// Create DTLS Config
 		DtlsConnectorConfig.Builder dtlsConfig = new DtlsConnectorConfig.Builder();
 		dtlsConfig.setRecommendedCipherSuitesOnly(!supportDeprecatedCiphers);
+		dtlsConfig.setMaxRetransmissions(60);
+		dtlsConfig.setRetransmissionTimeout(10000);
 
 		X509Certificate serverCertificate = null;
 		if (certificate != null) {
@@ -637,11 +639,11 @@ public class AirQualityServer {
 		});
 
 		lwServer.getObservationService().addListener(new ObservationListener () {
-			public void onResponse(Observation observation, Registration registration, 
+			public void onResponse(Observation observation, Registration registration,
 				ObserveResponse response) {
-				System.out.println("Receive notification from " + observation.getPath() 
+				System.out.println("Receive notification from " + observation.getPath()
 								  + " value " + response.getContent().toString());
-		
+
 				//airqdb.observation(response, registration.getEndpoint(), lwServer, registration);
 			}
 
