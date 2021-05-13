@@ -10,7 +10,7 @@
 #include <zephyr.h>
 #include <net/lwm2m.h>
 
-#include "ui.h"
+// #include "ui.h"
 
 #ifdef __cplusplus
 extern "C" {
