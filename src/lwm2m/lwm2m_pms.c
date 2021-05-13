@@ -55,7 +55,6 @@ static void *pms1_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_in
 
 	int32_t ts;
 
-	read_pms(die_dev);
 	lwm2m_engine_set_float32("3300/3/5700", &pms_float[1]);
 	*data_len = sizeof(pms_float[1]);
 	/* get current time from device */
@@ -71,7 +70,6 @@ static void *pms2_read_cb(uint16_t obj_inst_id, uint16_t res_id, uint16_t res_in
 
 	int32_t ts;
 
-	read_pms(die_dev);
 	lwm2m_engine_set_float32("3300/4/5700", &pms_float[2]);
 	*data_len = sizeof(pms_float[2]);
 	/* get current time from device */
