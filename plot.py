@@ -1,10 +1,11 @@
+# %%
 # Libraries
 # NB!: pip install SciencePlots
-# %%
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 plt.style.use(['science','no-latex', 'ieee', 'light'])
+
 # %%
 # Prep Grafana data
 
@@ -108,3 +109,28 @@ plt.xlabel("UTC+01", fontsize=5)
 plt.legend(["PM2.5", "PM10"], fontsize=6)
 
 plt.show()
+
+# %%
+# PPK
+data = pd.read_csv("SolfyltdagMPPT.csv", header=0)
+t = data.iloc[:, 0].to_numpy()/(1000 * 60) # time to s
+a = data.iloc[:, 1].to_numpy()/1000 # current in mA
+
+def rfind(arr, lst):
+    return [i for i, x in enumerate(arr) if x == lst[0] or x == lst[1]]
+
+def rplot(lst, s):
+    plt.plot(t[lst[0]:lst[1]], a[lst[0]:lst[1]])
+    plt.xlabel("t [min]")
+    plt.ylabel("I [mA]")
+    if s == 1:
+        plt.savefig("solfyltdagmppt_2.png")
+    plt.show()
+
+plt.plot(t, a)
+plt.xlabel("t [min]")
+plt.ylabel("I [mA]")
+plt.savefig("sekvens2.png")
+plt.show()
+
+# rplot(rfind(t, [40, 70]), 1)
