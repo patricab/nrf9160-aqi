@@ -31,7 +31,7 @@ class Valid:
         self.t = r*math.sqrt((length - 2)/(1 - r**2)) # Get T value from student T-distrubution of pearson correlation
         self.p = st.t.sf(abs(self.t), df=2) # Lookup p value based on t value
 
-        if (self.p <= 0.05): # Check if p value is less than alpha level => rejects null hypothesis
+        if (self.p < 0.05): # Check if p value is less than alpha level => rejects null hypothesis
             self.valid2 = True
         else: # Check if p value is greater than alpha level => accept null hypothesis
             self.valid2 = False
