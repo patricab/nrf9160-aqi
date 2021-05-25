@@ -1,0 +1,9 @@
+sample:
+  name: nrf9160-aqi
+tests:
+  nrf9160-aqi:
+    build_only: true
+    build_on_all: true
+    extra_args: OVERLAY_CONFIG=overlay-ci.conf
+    platform_allow: nrf9160dk_nrf9160ns, thingy91_nrf9160ns
+    tags: ci_build
