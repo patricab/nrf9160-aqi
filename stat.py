@@ -92,11 +92,10 @@ for x in pm10:
         i = i + 1
 
 # Extract times that match with NILU data
-# pm2_5 = np.take(pm2_5, [7, 17, 22, 28, 34, 39, 46, 53])/1e9
-pm2_5 = np.take(pm2_5, [7, 17, 22, 28, 34, 39, 46, 53])
-pm10 = np.take(pm10, [8, 16, 23, 31, 41, 48, 54, 60])
-t2 = np.take(t2, [7, 17, 22, 28, 34, 39, 46, 53])
-t3 = np.take(t3, [8, 16, 23, 31, 41, 48, 54, 60])
+pm2_5 = np.take(pm2_5, [0, 7, 17, 22, 28, 34, 39, 46])
+pm10 = np.take(pm10, [0, 8, 16, 23, 31, 41, 48, 54])
+t2 = np.take(t2, [0, 7, 17, 22, 28, 34, 39, 46])
+t3 = np.take(t3, [0, 8, 16, 23, 31, 41, 48, 54])
 
 # %%
 # Prep NILU
@@ -150,10 +149,10 @@ plt.plot(nt, npm2_5, '#77aadd')
 plt.xticks(fontsize=4)
 plt.yticks(fontsize=4)
 plt.ylabel("ug/m3", fontsize=5)
-plt.xlabel("UTC+01", fontsize=5)
+plt.xlabel("UTC+02 (CEST)", fontsize=5)
 plt.legend(["NILU"], fontsize=5)
 
-# plt.savefig("test_pm2_5.png")
+plt.savefig("test_pm2_5.png")
 plt.show()
 
 plt.subplot(2,1,1)
@@ -171,8 +170,8 @@ plt.plot(nt, npm10, '#44bb99')
 plt.xticks(fontsize=4)
 plt.yticks(fontsize=4)
 plt.ylabel("ug/m3", fontsize=5)
-plt.xlabel("UTC+01", fontsize=5)
+plt.xlabel("UTC+02 (CEST)", fontsize=5)
 plt.legend(["NILU"], fontsize=5)
 
-# plt.savefig("test_pm10.png")
+plt.savefig("test_pm10.png")
 plt.show()
