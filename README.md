@@ -42,6 +42,25 @@ sudo -u postgres psql # enter database
 GRANT ALL PRIVILEGES ON DATABASE airqdb TO airq; # grant privileges
 ```
 
+<<<<<<< HEAD
+=======
+Install Grafana server
+```sh
+sudo apt install -y apt-transport-https
+sudo apt install -y software-properties-common wget
+wget -q -O - https://packages.grafana.com/gpg.key |
+sudo apt-key add - # add grafana repository Open-Source Software version
+echo "deb https://packages.grafana.com/oss/deb stable main" |
+sudo tee -a /etc/apt/sources.list.d/grafana.list
+sudo apt update # update package list
+sudo apt install grafana # install grafana
+sudo service grafana-server start # Start grafana server
+sudo service grafana-server status # Check if it works
+sudo update-rc.d grafana-server defaults # Set to start on boot
+
+```
+
+>>>>>>> dev
 ## Use
 
 Building the code for Thingy:91
