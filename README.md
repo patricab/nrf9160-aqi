@@ -42,7 +42,6 @@ sudo -u postgres psql # enter database
 GRANT ALL PRIVILEGES ON DATABASE airqdb TO airq; # grant privileges
 ```
 
-<<<<<<< HEAD
 =======
 Install Grafana server
 ```sh
@@ -60,7 +59,6 @@ sudo update-rc.d grafana-server defaults # Set to start on boot
 
 ```
 
->>>>>>> dev
 ## Use
 
 Building the code for Thingy:91
