@@ -42,7 +42,6 @@ sudo -u postgres psql # enter database
 GRANT ALL PRIVILEGES ON DATABASE airqdb TO airq; # grant privileges
 ```
 
-=======
 Install Grafana server
 ```sh
 sudo apt install -y apt-transport-https
