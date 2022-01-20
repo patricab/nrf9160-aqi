@@ -7,7 +7,7 @@ We are 4 students (_now through_) studying Electronics Enginering (FTHINGEL) at 
 
 This repo contains all of the source code from the thesis, including the sensor drivers for the air quality sensors, based on the nRF environment, and the Leshan/database code that we used for cloud services.
 
-**NB**: We will add a link here to the thesis once it has been through the publishing system at NTNU ;)
+**Link to paper**: [https://ntnuopen.ntnu.no/ntnu-xmlui/handle/11250/2778185](https://ntnuopen.ntnu.no/ntnu-xmlui/handle/11250/2778185)
 
 ## Installation
 
